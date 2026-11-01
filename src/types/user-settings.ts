@@ -196,6 +196,13 @@ export type ClipboardSettings = {
 
 export type QuickAccessSectionId = 'favorites' | 'tagged';
 
+export type CustomOpenCommand = {
+  id: string;
+  name: string;
+  programPath: string;
+  arguments: string;
+};
+
 export type UserSettings = {
   language: LocalizationLanguage;
   theme: Theme;
@@ -222,6 +229,7 @@ export type UserSettings = {
   globalShortcuts?: UserGlobalShortcuts;
   focusWindowOnDriveConnected: boolean;
   preventDropdownCloseFocusReturn: boolean;
+  customOpenCommands: CustomOpenCommand[];
   quickAccessOnHover: boolean;
   quickAccessSectionOrder: QuickAccessSectionId[];
   tooltipDelayMs: number;

@@ -1057,7 +1057,8 @@
     "commandName": "命令名称",
     "commandNamePlaceholder": "例如：带字幕的VLC",
     "programPath": "程序路径",
-    "noCustomCommands": "暂无自定义命令。添加自定义命令以使用特定参数打开文件。"
+    "noCustomCommands": "暂无自定义命令。添加自定义命令以使用特定参数打开文件。",
+    "detectedPrograms": "检测到的程序"
   },
   "moreOptions": {
     "loading": "正在加载选项...",

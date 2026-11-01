@@ -14,7 +14,7 @@ mod install;
 mod manifest_permissions;
 mod misc;
 mod paths;
-mod processes;
+pub(crate) mod processes;
 mod registry_storage;
 mod security;
 mod state;

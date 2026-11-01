@@ -1057,7 +1057,8 @@
     "commandName": "Komut adı",
     "commandNamePlaceholder": "örn. Altyazılı VLC",
     "programPath": "Program yolu",
-    "noCustomCommands": "Henüz özel komut yok. Dosyaları belirli bayraklarla açmak için özel komut ekleyin."
+    "noCustomCommands": "Henüz özel komut yok. Dosyaları belirli bayraklarla açmak için özel komut ekleyin.",
+    "detectedPrograms": "Algılanan programlar"
   },
   "moreOptions": {
     "loading": "Seçenekler yükleniyor...",

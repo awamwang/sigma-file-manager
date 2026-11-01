@@ -1087,7 +1087,8 @@
     "commandName": "Command name",
     "commandNamePlaceholder": "e.g. VLC with subtitles",
     "programPath": "Program path",
-    "noCustomCommands": "No custom commands yet. Add a custom command to open files with specific flags."
+    "noCustomCommands": "No custom commands yet. Add a custom command to open files with specific flags.",
+    "detectedPrograms": "Detected programs"
   },
   "moreOptions": {
     "loading": "Loading options...",

@@ -1057,7 +1057,8 @@
     "commandName": "Nombre del comando",
     "commandNamePlaceholder": "ej. VLC con subtítulos",
     "programPath": "Ruta del programa",
-    "noCustomCommands": "No hay comandos personalizados aún. Agrega un comando personalizado para abrir archivos con flags específicas."
+    "noCustomCommands": "No hay comandos personalizados aún. Agrega un comando personalizado para abrir archivos con flags específicas.",
+    "detectedPrograms": "Programas detectados"
   },
   "moreOptions": {
     "loading": "Cargando opciones...",

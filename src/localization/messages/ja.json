@@ -1057,7 +1057,8 @@
     "commandName": "コマンド名",
     "commandNamePlaceholder": "例: 字幕付きVLC",
     "programPath": "プログラムパス",
-    "noCustomCommands": "カスタムコマンドがありません。特定のフラグでファイルを開くためのカスタムコマンドを追加してください。"
+    "noCustomCommands": "カスタムコマンドがありません。特定のフラグでファイルを開くためのカスタムコマンドを追加してください。",
+    "detectedPrograms": "検出されたプログラム"
   },
   "moreOptions": {
     "loading": "オプションを読み込み中...",

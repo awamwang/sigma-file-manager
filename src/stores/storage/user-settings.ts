@@ -8,6 +8,7 @@ import { LazyStore } from '@tauri-apps/plugin-store';
 import { ref, computed, watch } from 'vue';
 import type {
   UserSettings,
+  CustomOpenCommand,
   LocalizationLanguage,
   NavigatorFolderSettingsMap,
   UserSettingsPath,
@@ -211,6 +212,7 @@ export const useUserSettingsStore = defineStore('userSettings', () => {
     globalShortcuts: {},
     focusWindowOnDriveConnected: true,
     preventDropdownCloseFocusReturn: false,
+    customOpenCommands: [],
     quickAccessOnHover: true,
     quickAccessSectionOrder: ['favorites', 'tagged'],
     tooltipDelayMs: 0,
@@ -627,6 +629,62 @@ export const useUserSettingsStore = defineStore('userSettings', () => {
     return true;
   }
 
+  function parseStoredCustomOpenCommands(stored: string | null): CustomOpenCommand[] {
+    if (!stored) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(stored);
+
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      const commands: CustomOpenCommand[] = [];
+
+      for (const item of parsed) {
+        if (!item || typeof item !== 'object') {
+          continue;
+        }
+
+        const record = item as Record<string, unknown>;
+
+        if (typeof record.id !== 'string' || typeof record.name !== 'string' || typeof record.programPath !== 'string') {
+          continue;
+        }
+
+        commands.push({
+          id: record.id,
+          name: record.name,
+          programPath: record.programPath,
+          arguments: typeof record.arguments === 'string' ? record.arguments : '',
+        });
+      }
+
+      return commands;
+    }
+    catch {
+      return [];
+    }
+  }
+
+  async function migrateCustomOpenCommandsFromLocalStorage() {
+    const stored = localStorage.getItem('sigma-custom-open-commands');
+
+    if (stored === null) {
+      return;
+    }
+
+    const storedCommands = parseStoredCustomOpenCommands(stored);
+
+    if (storedCommands.length > 0 && userSettings.value.customOpenCommands.length === 0) {
+      await set('customOpenCommands', storedCommands);
+    }
+
+    localStorage.removeItem('sigma-custom-open-commands');
+  }
+
   async function init(bootstrapFile?: StartupStorageFileBootstrap) {
     const resolvedBootstrapFile = bootstrapFile ?? await getStartupStorageFile('userSettings');
     await initUserSettings();
@@ -644,6 +702,8 @@ export const useUserSettingsStore = defineStore('userSettings', () => {
     if (!loadedFromBootstrap) {
       await loadUserSettings();
     }
+
+    await migrateCustomOpenCommandsFromLocalStorage();
 
     initTheme();
     themeTransitionsEnabled.value = true;

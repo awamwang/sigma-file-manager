@@ -1056,7 +1056,8 @@
     "commandName": "Nome do comando",
     "commandNamePlaceholder": "ex. VLC com legendas",
     "programPath": "Caminho do programa",
-    "noCustomCommands": "Nenhum comando personalizado ainda. Adicione um comando personalizado para abrir arquivos com flags específicas."
+    "noCustomCommands": "Nenhum comando personalizado ainda. Adicione um comando personalizado para abrir arquivos com flags específicas.",
+    "detectedPrograms": "Programas detectados"
   },
   "moreOptions": {
     "loading": "Carregando opções...",

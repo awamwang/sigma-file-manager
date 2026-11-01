@@ -166,7 +166,7 @@ fn resolve_command_in_dir(dir: &Path, command_name: &str) -> Option<PathBuf> {
     }
 }
 
-fn resolve_from_system_path(command_name: &str) -> Option<PathBuf> {
+pub(crate) fn resolve_from_system_path(command_name: &str) -> Option<PathBuf> {
     let path_var = std::env::var("PATH").unwrap_or_default();
     let separator = if cfg!(windows) { ';' } else { ':' };
 

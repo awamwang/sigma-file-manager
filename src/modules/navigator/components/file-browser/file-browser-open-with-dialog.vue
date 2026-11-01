@@ -9,6 +9,8 @@ import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import type { DirEntry } from '@/types/dir-entry';
+import { useUserSettingsStore } from '@/stores/storage/user-settings';
+import { detectIdePresets, type DetectedIdePreset } from '@/utils/ide-presets';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +30,7 @@ import {
   Trash2Icon,
   PlayIcon,
   FileIcon,
+  TerminalIcon,
 } from '@lucide/vue';
 
 interface CustomCommand {
@@ -54,11 +57,13 @@ const emit = defineEmits<{
 const isOpen = defineModel<boolean>('open', { required: true });
 
 const { t } = useI18n();
+const userSettingsStore = useUserSettingsStore();
 
 const isOpening = ref(false);
 const loadError = ref<string | null>(null);
 
 const customCommands = ref<CustomCommand[]>([]);
+const detectedPresets = ref<DetectedIdePreset[]>([]);
 const selectedCommandId = ref<string | null>(null);
 
 const isAddingCommand = ref(false);
@@ -69,25 +74,21 @@ const newCommandPath = ref('');
 const newCommandArgs = ref('');
 
 function loadCustomCommands() {
-  const stored = localStorage.getItem('sigma-custom-open-commands');
-
-  if (stored) {
-    try {
-      customCommands.value = JSON.parse(stored);
-    }
-    catch {
-      customCommands.value = [];
-    }
-  }
+  customCommands.value = [...userSettingsStore.userSettings.customOpenCommands];
 }
 
-function saveCustomCommands() {
-  localStorage.setItem('sigma-custom-open-commands', JSON.stringify(customCommands.value));
+async function saveCustomCommands() {
+  await userSettingsStore.set('customOpenCommands', customCommands.value);
+}
+
+async function loadDetectedPresets() {
+  detectedPresets.value = await detectIdePresets();
 }
 
 watch(isOpen, (open) => {
   if (open) {
     loadCustomCommands();
+    void loadDetectedPresets();
     selectedCommandId.value = null;
     isAddingCommand.value = false;
     editingCommandId.value = null;
@@ -183,6 +184,15 @@ function deleteCommand(commandId: string) {
   if (editingCommandId.value === commandId) {
     cancelEditing();
   }
+}
+
+function presetToCommand(preset: DetectedIdePreset): CustomCommand {
+  return {
+    id: `preset-${preset.command}`,
+    name: preset.name,
+    programPath: preset.programPath,
+    arguments: '',
+  };
 }
 
 function parseArguments(argsString: string): string[] {
@@ -287,6 +297,47 @@ const canSaveCommand = computed(() => {
           class="custom-command-dialog__error"
         >
           {{ loadError }}
+        </div>
+
+        <div
+          v-if="detectedPresets.length > 0"
+          class="custom-command-dialog__section"
+        >
+          <div class="custom-command-dialog__section-header">
+            <span class="custom-command-dialog__section-label">{{ t('openWith.detectedPrograms') }}</span>
+          </div>
+
+          <div
+            v-for="preset in detectedPresets"
+            :key="preset.command"
+            class="custom-command-dialog__command"
+            @dblclick="runCommand(presetToCommand(preset))"
+          >
+            <div class="custom-command-dialog__command-info">
+              <TerminalIcon
+                :size="16"
+                class="custom-command-dialog__command-icon"
+              />
+              <div class="custom-command-dialog__command-details">
+                <span class="custom-command-dialog__command-name">{{ preset.name }}</span>
+                <span class="custom-command-dialog__command-path">{{ preset.programPath }}</span>
+              </div>
+            </div>
+            <div class="custom-command-dialog__command-actions custom-command-dialog__command-actions--visible">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    @click.stop="runCommand(presetToCommand(preset))"
+                  >
+                    <PlayIcon :size="14" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{{ t('run') }}</TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
         </div>
 
         <div class="custom-command-dialog__section">
@@ -589,6 +640,10 @@ const canSaveCommand = computed(() => {
   gap: 2px;
   opacity: 0;
   transition: opacity 0.15s ease;
+}
+
+.custom-command-dialog__command-actions--visible {
+  opacity: 1;
 }
 
 .custom-command-dialog__command:hover .custom-command-dialog__command-actions {

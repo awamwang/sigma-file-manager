@@ -1057,7 +1057,8 @@
     "commandName": "Tên lệnh",
     "commandNamePlaceholder": "ví dụ: VLC với phụ đề",
     "programPath": "Đường dẫn chương trình",
-    "noCustomCommands": "Chưa có lệnh tùy chỉnh. Thêm lệnh tùy chỉnh để mở tệp với các cờ cụ thể."
+    "noCustomCommands": "Chưa có lệnh tùy chỉnh. Thêm lệnh tùy chỉnh để mở tệp với các cờ cụ thể.",
+    "detectedPrograms": "Chương trình được phát hiện"
   },
   "moreOptions": {
     "loading": "Đang tải tùy chọn...",

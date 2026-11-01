@@ -1057,7 +1057,8 @@
     "commandName": "Nome comando",
     "commandNamePlaceholder": "es. VLC con sottotitoli",
     "programPath": "Percorso del programma",
-    "noCustomCommands": "Nessun comando personalizzato. Aggiungi un comando personalizzato per aprire file con flag specifiche."
+    "noCustomCommands": "Nessun comando personalizzato. Aggiungi un comando personalizzato per aprire file con flag specifiche.",
+    "detectedPrograms": "Programmi rilevati"
   },
   "moreOptions": {
     "loading": "Caricamento opzioni...",

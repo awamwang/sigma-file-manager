@@ -1087,7 +1087,8 @@
     "commandName": "Ime ukaza",
     "commandNamePlaceholder": "npr. VLC s podnapisi",
     "programPath": "Pot do programa",
-    "noCustomCommands": "Še ni ukazov po meri. Dodajte ukaz po meri za odpiranje datotek s posebnimi zastavicami."
+    "noCustomCommands": "Še ni ukazov po meri. Dodajte ukaz po meri za odpiranje datotek s posebnimi zastavicami.",
+    "detectedPrograms": "Zaznani programi"
   },
   "moreOptions": {
     "loading": "Nalagam možnosti...",

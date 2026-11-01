@@ -1057,7 +1057,8 @@
     "commandName": "Befehlsname",
     "commandNamePlaceholder": "z.B. VLC mit Untertiteln",
     "programPath": "Programmpfad",
-    "noCustomCommands": "Noch keine benutzerdefinierten Befehle. Fügen Sie einen Befehl hinzu, um Dateien mit bestimmten Flags zu öffnen."
+    "noCustomCommands": "Noch keine benutzerdefinierten Befehle. Fügen Sie einen Befehl hinzu, um Dateien mit bestimmten Flags zu öffnen.",
+    "detectedPrograms": "Erkannte Programme"
   },
   "moreOptions": {
     "loading": "Optionen werden geladen...",

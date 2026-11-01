@@ -277,6 +277,21 @@ pub fn open_with_program(
     }
 }
 
+/// Resolves a command name (e.g. `code`) against the system PATH and returns
+/// the absolute path of the first spawnable match. Used by the front-end to
+/// detect installed launchers such as IDEs for the "Open with" built-ins.
+#[tauri::command]
+pub fn resolve_command_in_path(command: String) -> Option<String> {
+    let trimmed = command.trim();
+
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    crate::extensions::processes::resolve_from_system_path(trimmed)
+        .map(|path| path.to_string_lossy().to_string())
+}
+
 #[tauri::command]
 pub fn open_with_default(file_path: String) -> OpenWithResult {
     #[cfg(target_os = "windows")]
