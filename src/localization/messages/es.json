@@ -171,6 +171,7 @@
     "subtitle": "Acceso rápido a tus elementos favoritos, etiquetados y más utilizados",
     "tabs": {
       "favorites": "Favoritos",
+      "projects": "Proyectos",
       "tagged": "Etiquetados",
       "frequent": "Frecuentes",
       "history": "Vistos recientemente"
@@ -183,6 +184,9 @@
     },
     "emptyFavorites": "Aún no hay favoritos",
     "emptyFavoritesDescription": "Haz clic derecho en cualquier archivo o carpeta en el navegador y selecciona \"Añadir a favoritos\".",
+    "emptyProjects": "Aún no hay proyectos",
+    "emptyProjectsDescription": "Haz clic derecho en cualquier carpeta del navegador y selecciona \"Añadir a proyectos\" para verla aquí.",
+    "projectNeverOpened": "Nunca abierto",
     "emptyTagged": "Sin elementos etiquetados",
     "emptyTaggedDescription": "Usa etiquetas para organizar y categorizar tus archivos y carpetas para un acceso rápido.",
     "emptyFrequent": "Sin elementos frecuentes",

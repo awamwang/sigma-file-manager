@@ -13,6 +13,7 @@ import {
   TagIcon,
   TrendingUpIcon,
   ClockIcon,
+  FolderIcon,
   XIcon,
 } from '@lucide/vue';
 import { PageDefaultLayout } from '@/layouts';
@@ -29,6 +30,7 @@ import {
   HISTORY_MAX_ITEMS,
   useUserStatsStore,
 } from '@/stores/storage/user-stats';
+import { useUserProjectsStore } from '@/stores/storage/user-projects';
 import { usePageDropZone } from '@/composables/use-page-drop-zone';
 import { useRestoredChoice } from '@/composables/use-restored-active-tab';
 import { useFileDropOperation } from '@/composables/use-file-drop-operation';
@@ -39,6 +41,7 @@ import DashboardActionBar from '@/modules/dashboard/components/dashboard-action-
 import DashboardEmptyState from '@/modules/dashboard/components/dashboard-empty-state.vue';
 import DashboardHero from '@/modules/dashboard/components/dashboard-hero.vue';
 import DashboardOpenFolderButton from '@/modules/dashboard/components/dashboard-open-folder-button.vue';
+import DashboardProjectsView from '@/modules/dashboard/components/dashboard-projects-view.vue';
 import DashboardTaggedView from '@/modules/dashboard/components/dashboard-tagged-view.vue';
 import EntryCard from '@/modules/dashboard/components/entry-card.vue';
 import { provideDashboardEntryPreviews } from '@/modules/dashboard/composables/use-dashboard-entry-previews';
@@ -55,10 +58,11 @@ import {
 const { t } = useI18n();
 const route = useRoute();
 const userStatsStore = useUserStatsStore();
+const userProjectsStore = useUserProjectsStore();
 provideDashboardEntryPreviews();
 const { openItem } = useDashboardItemOpener();
 
-const DASHBOARD_TABS = ['favorites', 'tagged', 'frequent', 'history'] as const;
+const DASHBOARD_TABS = ['favorites', 'projects', 'tagged', 'frequent', 'history'] as const;
 
 type DashboardTab = typeof DASHBOARD_TABS[number];
 
@@ -89,11 +93,13 @@ watch(() => route.query.tab, (tabQuery) => {
 }, { immediate: true });
 
 const favoriteItems = computed(() => userStatsStore.favorites);
+const projectItems = computed(() => userProjectsStore.projects);
 const taggedItems = computed(() => userStatsStore.taggedItems);
 const historyItems = computed(() => userStatsStore.sortedHistory);
 const frequentItems = computed(() => userStatsStore.sortedFrequentItems);
 const dashboardTabs = computed(() => [
   createDashboardTab('favorites', StarIcon, 'amber', favoriteItems.value.length),
+  createDashboardTab('projects', FolderIcon, 'cyan', projectItems.value.length),
   createDashboardTab('tagged', TagIcon, 'purple', taggedItems.value.length),
   createDashboardTab('frequent', TrendingUpIcon, 'blue', frequentItems.value.length, FREQUENT_ITEMS_MAX),
   createDashboardTab('history', ClockIcon, 'green', historyItems.value.length, HISTORY_MAX_ITEMS),
@@ -219,6 +225,13 @@ function formatRelativeTime(timestamp: number): string {
               </EntryCard>
             </DirEntryInteractive>
           </div>
+        </TabsContent>
+
+        <TabsContent
+          value="projects"
+          class="dashboard-page__tab-content"
+        >
+          <DashboardProjectsView />
         </TabsContent>
 
         <TabsContent
@@ -364,7 +377,7 @@ function formatRelativeTime(timestamp: number): string {
   border-radius: 0;
   background-color: transparent;
   gap: 12px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .dashboard-page__tab-card--amber {
@@ -373,6 +386,10 @@ function formatRelativeTime(timestamp: number): string {
 
 .dashboard-page__tab-card--purple {
   --dashboard-tab-tone: 262 83% 66%;
+}
+
+.dashboard-page__tab-card--cyan {
+  --dashboard-tab-tone: 187 85% 43%;
 }
 
 .dashboard-page__tab-card--blue {

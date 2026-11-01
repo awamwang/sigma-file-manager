@@ -210,6 +210,15 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     await saveProjects();
   }
 
+  async function clearAllProjects() {
+    if (userProjects.value.projects.length === 0) {
+      return;
+    }
+
+    userProjects.value.projects = [];
+    await saveProjects();
+  }
+
   function replacePathPrefix(path: string, oldPrefix: string, newPrefix: string): string | null {
     if (path === oldPrefix) return newPrefix;
     if (path.startsWith(oldPrefix + '/')) return newPrefix + path.slice(oldPrefix.length);
@@ -275,6 +284,7 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     renameProject,
     setProjects,
     recordProjectOpened,
+    clearAllProjects,
     handlePathRenamed,
     handlePathsDeleted,
   };

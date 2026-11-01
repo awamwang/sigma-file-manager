@@ -200,6 +200,7 @@
     "subtitle": "Hiter dostop do vaših priljubljenih, označenih in pogosto uporabljenih predmetov",
     "tabs": {
       "favorites": "Priljubljene",
+      "projects": "Projekti",
       "tagged": "Označene",
       "frequent": "Pogoste",
       "history": "Nedavno ogledano"
@@ -212,6 +213,9 @@
     },
     "emptyFavorites": "Še brez priljubljenih",
     "emptyFavoritesDescription": "Desno kliknite katerokoli datoteko ali mapo v navigatorju in izberite \"Dodaj med priljubljene\", da se bodo tukaj prikazale.",
+    "emptyProjects": "Ni še projektov",
+    "emptyProjectsDescription": "Z desnim klikom na katero koli mapo v krmarju izberite \"Dodaj med projekte\", da jo vidite tukaj.",
+    "projectNeverOpened": "Nikoli odprto",
     "emptyTagged": "Ni označenih predmetov",
     "emptyTaggedDescription": "Uporabite oznake za organizacijo in kategorizacijo vaših datotek in map za hiter dostop.",
     "emptyFrequent": "Ni pogosto uporabljenih predmetov",

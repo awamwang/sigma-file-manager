@@ -171,6 +171,7 @@
     "subtitle": "Truy cập nhanh các mục yêu thích, được gắn thẻ và thường dùng",
     "tabs": {
       "favorites": "Yêu thích",
+      "projects": "Dự án",
       "tagged": "Đã gắn thẻ",
       "frequent": "Thường dùng",
       "history": "Đã xem gần đây"
@@ -183,6 +184,9 @@
     },
     "emptyFavorites": "Chưa có mục yêu thích",
     "emptyFavoritesDescription": "Nhấp chuột phải vào bất kỳ tệp hoặc thư mục nào trong trình duyệt và chọn \"Thêm vào yêu thích\".",
+    "emptyProjects": "Chưa có dự án nào",
+    "emptyProjectsDescription": "Nhấp chuột phải vào bất kỳ thư mục nào trong trình điều hướng và chọn \"Thêm vào dự án\" để xem tại đây.",
+    "projectNeverOpened": "Chưa từng mở",
     "emptyTagged": "Không có mục được gắn thẻ",
     "emptyTaggedDescription": "Sử dụng thẻ để tổ chức và phân loại tệp và thư mục của bạn để truy cập nhanh.",
     "emptyFrequent": "Không có mục thường dùng",

@@ -200,6 +200,7 @@
     "subtitle": "Quick access to your favorite, tagged, and frequently used items",
     "tabs": {
       "favorites": "Favorites",
+      "projects": "Projects",
       "tagged": "Tagged",
       "frequent": "Frequent",
       "history": "Recently viewed"
@@ -212,6 +213,9 @@
     },
     "emptyFavorites": "No favorites yet",
     "emptyFavoritesDescription": "Right-click on any file or folder in the navigator and select \"Add to favorites\" to see them here.",
+    "emptyProjects": "No projects yet",
+    "emptyProjectsDescription": "Right-click on any folder in the navigator and select \"Add to projects\" to see it here.",
+    "projectNeverOpened": "Never opened",
     "emptyTagged": "No tagged items",
     "emptyTaggedDescription": "Use tags to organize and categorize your files and folders for quick access.",
     "emptyFrequent": "No frequently used items",

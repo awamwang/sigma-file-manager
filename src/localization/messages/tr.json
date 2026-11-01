@@ -171,6 +171,7 @@
     "subtitle": "Favorilerinize, etiketli ve sık kullanılan öğelerinize hızlı erişim",
     "tabs": {
       "favorites": "Favoriler",
+      "projects": "Projeler",
       "tagged": "Etiketli",
       "frequent": "Sık Kullanılan",
       "history": "Son görüntülenenler"
@@ -183,6 +184,9 @@
     },
     "emptyFavorites": "Henüz favori yok",
     "emptyFavoritesDescription": "Gezginde herhangi bir dosya veya klasöre sağ tıklayın ve \"Favorilere ekle\" seçeneğini seçin.",
+    "emptyProjects": "Henüz proje yok",
+    "emptyProjectsDescription": "Görüntülemek için gezgindeki herhangi bir klasöre sağ tıklayın ve \"Projelere ekle\" seçeneğini belirleyin.",
+    "projectNeverOpened": "Hiç açılmadı",
     "emptyTagged": "Etiketli öğe yok",
     "emptyTaggedDescription": "Hızlı erişim için dosya ve klasörlerinizi organize etmek ve kategorize etmek için etiketler kullanın.",
     "emptyFrequent": "Sık kullanılan öğe yok",

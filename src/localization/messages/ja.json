@@ -171,6 +171,7 @@
     "subtitle": "お気に入り、タグ付け、よく使うアイテムへのクイックアクセス",
     "tabs": {
       "favorites": "お気に入り",
+      "projects": "プロジェクト",
       "tagged": "タグ",
       "frequent": "よく使う",
       "history": "最近表示した項目"
@@ -183,6 +184,9 @@
     },
     "emptyFavorites": "お気に入りはまだありません",
     "emptyFavoritesDescription": "ナビゲーターでファイルまたはフォルダーを右クリックし、「お気に入りに追加」を選択してください。",
+    "emptyProjects": "プロジェクトはまだありません",
+    "emptyProjectsDescription": "ナビゲーター内のフォルダーを右クリックして「プロジェクトに追加」を選択すると、ここに表示されます。",
+    "projectNeverOpened": "未開封",
     "emptyTagged": "タグ付けされたアイテムはありません",
     "emptyTaggedDescription": "タグを使用してファイルとフォルダーを整理し、素早くアクセスできるようにしましょう。",
     "emptyFrequent": "よく使うアイテムはありません",

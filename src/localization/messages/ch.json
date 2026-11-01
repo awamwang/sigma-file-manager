@@ -171,6 +171,7 @@
     "subtitle": "快速访问您的收藏、标记和常用项目",
     "tabs": {
       "favorites": "收藏",
+      "projects": "项目",
       "tagged": "已标记",
       "frequent": "常用",
       "history": "最近查看"
@@ -183,6 +184,9 @@
     },
     "emptyFavorites": "暂无收藏",
     "emptyFavoritesDescription": "在导航器中右键点击任何文件或文件夹，选择\"添加到收藏\"。",
+    "emptyProjects": "暂无项目",
+    "emptyProjectsDescription": "在导航器中右键点击任意文件夹并选择\"添加到项目\"，即可在此查看。",
+    "projectNeverOpened": "从未打开",
     "emptyTagged": "无标记项目",
     "emptyTaggedDescription": "使用标签来组织和分类您的文件和文件夹以便快速访问。",
     "emptyFrequent": "无常用项目",

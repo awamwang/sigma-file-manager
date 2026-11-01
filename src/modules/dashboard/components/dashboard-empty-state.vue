@@ -10,10 +10,11 @@ import {
   TagIcon,
   TrendingUpIcon,
   ClockIcon,
+  FolderIcon,
 } from '@lucide/vue';
 import { EmptyState } from '@/components/ui/empty-state';
 
-type EmptyStateType = 'favorites' | 'tagged' | 'frequent' | 'history';
+type EmptyStateType = 'favorites' | 'projects' | 'tagged' | 'frequent' | 'history';
 
 const props = defineProps<{
   type: EmptyStateType;
@@ -23,6 +24,7 @@ const props = defineProps<{
 
 const iconComponents: Record<EmptyStateType, Component> = {
   favorites: StarIcon,
+  projects: FolderIcon,
   tagged: TagIcon,
   frequent: TrendingUpIcon,
   history: ClockIcon,
