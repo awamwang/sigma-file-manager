@@ -115,23 +115,64 @@ fn is_bare_command_name(command_path: &str) -> bool {
     !command_path.contains('/') && !command_path.contains('\\') && !command_path.is_empty()
 }
 
+/// Checks whether an extensionless file is a Windows PE binary (starts with
+/// the "MZ" header). CreateProcess can only spawn such files; plain scripts
+/// like the bash wrapper `bin\code` shipped by VS Code fail with
+/// "%1 is not a valid Win32 application".
+#[cfg(windows)]
+fn is_pe_executable(path: &Path) -> bool {
+    use std::io::Read;
+
+    let Ok(mut file) = std::fs::File::open(path) else {
+        return false;
+    };
+    let mut header = [0u8; 2];
+    file.read_exact(&mut header).is_ok() && header == *b"MZ"
+}
+
+/// Resolves a command inside one PATH entry. On Windows only files
+/// CreateProcess can spawn are accepted: real executable extensions first
+/// (in PATHEXT order), then an extensionless file only if it is a PE binary.
+/// This keeps helper scripts such as VS Code's extensionless `bin\code` bash
+/// wrapper from shadowing `code.cmd` in the same directory.
+fn resolve_command_in_dir(dir: &Path, command_name: &str) -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        let executable_extensions = [".com", ".exe", ".bat", ".cmd"];
+
+        for extension in executable_extensions {
+            let full_path = dir.join(format!("{}{}", command_name, extension));
+            if full_path.is_file() {
+                return Some(full_path);
+            }
+        }
+
+        let bare_path = dir.join(command_name);
+        if bare_path.is_file() && is_pe_executable(&bare_path) {
+            return Some(bare_path);
+        }
+
+        None
+    }
+
+    #[cfg(not(windows))]
+    {
+        let full_path = dir.join(command_name);
+        if full_path.is_file() {
+            Some(full_path)
+        } else {
+            None
+        }
+    }
+}
+
 fn resolve_from_system_path(command_name: &str) -> Option<PathBuf> {
     let path_var = std::env::var("PATH").unwrap_or_default();
     let separator = if cfg!(windows) { ';' } else { ':' };
 
-    let extensions: Vec<&str> = if cfg!(windows) {
-        vec!["", ".exe", ".cmd", ".bat", ".com"]
-    } else {
-        vec![""]
-    };
-
     for dir in path_var.split(separator) {
-        let dir_path = PathBuf::from(dir);
-        for ext in &extensions {
-            let full_path = dir_path.join(format!("{}{}", command_name, ext));
-            if full_path.exists() && full_path.is_file() {
-                return Some(full_path);
-            }
+        if let Some(resolved) = resolve_command_in_dir(Path::new(dir), command_name) {
+            return Some(resolved);
         }
     }
 
@@ -547,4 +588,71 @@ pub async fn cancel_extension_command(
         task_id
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_pe_executable, resolve_command_in_dir};
+    use std::fs;
+    use std::path::Path;
+    use tempfile::tempdir;
+
+    #[cfg(windows)]
+    #[test]
+    fn prefers_executable_extension_over_extensionless_script_in_same_dir() {
+        let temp_directory = tempdir().expect("create temp directory");
+        // Mimics VS Code's bin directory: an extensionless bash wrapper next
+        // to the real code.cmd entry point.
+        fs::write(temp_directory.path().join("code"), b"#!/bin/sh\n").expect("write wrapper");
+        fs::write(temp_directory.path().join("code.cmd"), b"@echo off\n").expect("write cmd file");
+
+        let resolved = resolve_command_in_dir(temp_directory.path(), "code");
+
+        assert_eq!(
+            resolved.expect("resolve command").file_name(),
+            Some(std::ffi::OsStr::new("code.cmd"))
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn resolves_extensionless_pe_binary_when_no_extensioned_file_exists() {
+        let temp_directory = tempdir().expect("create temp directory");
+        let bare_path = temp_directory.path().join("tool");
+        fs::write(&bare_path, b"MZfakePE").expect("write PE binary");
+
+        assert!(is_pe_executable(&bare_path));
+        assert_eq!(
+            resolve_command_in_dir(temp_directory.path(), "tool")
+                .expect("resolve command")
+                .file_name(),
+            Some(std::ffi::OsStr::new("tool"))
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn rejects_extensionless_script_without_extensioned_fallback() {
+        let temp_directory = tempdir().expect("create temp directory");
+        fs::write(temp_directory.path().join("code"), b"#!/bin/sh\n").expect("write wrapper");
+
+        assert!(!is_pe_executable(Path::new(
+            temp_directory.path().join("code").to_str().expect("utf-8 path")
+        )));
+        assert!(resolve_command_in_dir(temp_directory.path(), "code").is_none());
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn resolves_plain_file_in_directory() {
+        let temp_directory = tempdir().expect("create temp directory");
+        fs::write(temp_directory.path().join("tool"), b"#!/bin/sh\n").expect("write script");
+
+        assert_eq!(
+            resolve_command_in_dir(temp_directory.path(), "tool")
+                .expect("resolve command")
+                .file_name(),
+            Some(std::ffi::OsStr::new("tool"))
+        );
+    }
 }
