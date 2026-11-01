@@ -10,6 +10,7 @@ import type { DirEntry } from '@/types/dir-entry';
 import type { ContextMenuAction } from '@/modules/navigator/components/file-browser/types';
 import { useWorkspacesStore } from '@/stores/storage/workspaces';
 import { useUserStatsStore } from '@/stores/storage/user-stats';
+import { useUserProjectsStore } from '@/stores/storage/user-projects';
 import { useUserSettingsStore } from '@/stores/storage/user-settings';
 import {
   useClipboardStore,
@@ -39,6 +40,7 @@ export function useDirEntryActions() {
   const router = useRouter();
   const workspacesStore = useWorkspacesStore();
   const userStatsStore = useUserStatsStore();
+  const userProjectsStore = useUserProjectsStore();
   const userSettingsStore = useUserSettingsStore();
   const clipboardStore = useClipboardStore();
   const dirSizesStore = useDirSizesStore();
@@ -220,6 +222,7 @@ export function useDirEntryActions() {
         if (result.deletedPaths.length > 0) {
           workspacesStore.handlePathsDeleted(result.deletedPaths);
           userStatsStore.handlePathsDeleted(result.deletedPaths);
+          userProjectsStore.handlePathsDeleted(result.deletedPaths);
           userSettingsStore.handlePathsDeleted(result.deletedPaths);
           dirSizesStore.invalidate(result.deletedPaths);
 
@@ -276,6 +279,7 @@ export function useDirEntryActions() {
 
         workspacesStore.handlePathRenamed(oldPath, newPath);
         userStatsStore.handlePathRenamed(oldPath, newPath);
+        userProjectsStore.handlePathRenamed(oldPath, newPath);
         userSettingsStore.handlePathRenamed(oldPath, newPath);
         dirSizesStore.invalidate([entry.path]);
         workspacesStore.handleDirectoryContentsChanged([parentDir]);

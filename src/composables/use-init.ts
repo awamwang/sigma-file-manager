@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router';
 import { useUserPathsStore } from '@/stores/storage/user-paths';
 import { useUserSettingsStore } from '@/stores/storage/user-settings';
 import { useUserStatsStore } from '@/stores/storage/user-stats';
+import { useUserProjectsStore } from '@/stores/storage/user-projects';
 import { useWorkspacesStore } from '@/stores/storage/workspaces';
 import { usePlatformStore } from '@/stores/runtime/platform';
 import { useGlobalSearchStore } from '@/stores/runtime/global-search';
@@ -63,6 +64,7 @@ export function useInit() {
   const router = useRouter();
   const userSettingsStore = useUserSettingsStore();
   const userStatsStore = useUserStatsStore();
+  const userProjectsStore = useUserProjectsStore();
   const workspacesStore = useWorkspacesStore();
   const userPathsStore = useUserPathsStore();
   const platformStore = usePlatformStore();
@@ -324,6 +326,7 @@ export function useInit() {
       }),
     );
     await traceInitStep('userStatsStore.init', () => userStatsStore.init());
+    await traceInitStep('userProjectsStore.init', () => userProjectsStore.init());
     await traceInitStep(
       'workspacesStore.init',
       () => workspacesStore.init(undefined, { loadInitialTabGroup: false }),

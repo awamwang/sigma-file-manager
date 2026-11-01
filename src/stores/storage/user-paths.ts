@@ -43,6 +43,8 @@ export const useUserPathsStore = defineStore('userPaths', () => {
     appUserDataWorkspacesPath: '',
     appUserDataStatsName: '',
     appUserDataStatsPath: '',
+    appUserDataProjectsName: '',
+    appUserDataProjectsPath: '',
     appUserDataExtensionsName: '',
     appUserDataExtensionsPath: '',
     appStorageCustomBackgroundsPath: '',
@@ -83,6 +85,8 @@ export const useUserPathsStore = defineStore('userPaths', () => {
     customPaths.value.appUserDataWorkspacesPath = `${customPaths.value.appUserDataDir}/${customPaths.value.appUserDataWorkspacesName}`;
     customPaths.value.appUserDataStatsName = fileNames.userStats;
     customPaths.value.appUserDataStatsPath = `${customPaths.value.appUserDataDir}/${customPaths.value.appUserDataStatsName}`;
+    customPaths.value.appUserDataProjectsName = fileNames.userProjects;
+    customPaths.value.appUserDataProjectsPath = `${customPaths.value.appUserDataDir}/${customPaths.value.appUserDataProjectsName}`;
     customPaths.value.appUserDataExtensionsName = fileNames.extensions;
     customPaths.value.appUserDataExtensionsPath = `${customPaths.value.appUserDataDir}/${customPaths.value.appUserDataExtensionsName}`;
     customPaths.value.appStorageCustomBackgroundsPath = `${customPaths.value.appUserDataDir}/media/custom-backgrounds`;

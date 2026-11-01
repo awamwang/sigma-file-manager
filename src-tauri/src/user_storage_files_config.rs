@@ -19,6 +19,7 @@ pub struct StorageFileNames {
     pub user_settings: String,
     pub workspaces: String,
     pub user_stats: String,
+    pub user_projects: String,
     pub extensions: String,
 }
 

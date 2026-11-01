@@ -18,6 +18,7 @@ export interface StartupStorageBootstrap {
   userSettings: StartupStorageFileBootstrap;
   workspaces: StartupStorageFileBootstrap;
   userStats: StartupStorageFileBootstrap;
+  userProjects: StartupStorageFileBootstrap;
   extensions: StartupStorageFileBootstrap;
 }
 
