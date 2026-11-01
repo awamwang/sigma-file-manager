@@ -985,6 +985,12 @@ export function useFileBrowserSelection(
         }
 
         break;
+      case 'toggle-project':
+        if (entries.length > 0) {
+          void toggleProjects(entries);
+        }
+
+        break;
       case 'copy-path':
         if (entries.length > 0) {
           const pathText = entries.map(entry => entry.path).join('\n');
@@ -1038,6 +1044,38 @@ export function useFileBrowserSelection(
     const message = allAreFavorites
       ? t('notifications.removedFromFavorites', entries.length)
       : t('notifications.addedToFavorites', entries.length);
+
+    toast.custom(markRaw(ToastStatic), {
+      componentProps: {
+        data: {
+          title: message,
+          description: '',
+        },
+      },
+    });
+  }
+
+  async function toggleProjects(entries: DirEntry[]) {
+    const directories = entries.filter(entry => entry.is_dir);
+
+    if (directories.length === 0) {
+      return;
+    }
+
+    const allAreProjects = directories.every(entry => userProjectsStore.isProject(entry.path));
+
+    for (const entry of directories) {
+      if (allAreProjects) {
+        await userProjectsStore.removeProject(entry.path);
+      }
+      else if (!userProjectsStore.isProject(entry.path)) {
+        await userProjectsStore.addProject(entry.path);
+      }
+    }
+
+    const message = allAreProjects
+      ? t('notifications.removedFromProjects', directories.length)
+      : t('notifications.addedToProjects', directories.length);
 
     toast.custom(markRaw(ToastStatic), {
       componentProps: {

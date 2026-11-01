@@ -705,7 +705,9 @@
     "addedToFavorites": "Added 0 items to favorites | Added 1 item to favorites | Added {n} items to favorites | Added {n} items to favorites",
     "createdNLinks": "0 bağlantı oluşturuldu | 1 bağlantı oluşturuldu | {n} bağlantı oluşturuldu | {n} bağlantı oluşturuldu",
     "createdNOfNLinks": "{total} bağlantıdan {created} tanesi oluşturuldu",
-    "linkCreationPartialFailureDescription": "{count} bağlantı başarısız oldu. İlk hata: {error}"
+    "linkCreationPartialFailureDescription": "{count} bağlantı başarısız oldu. İlk hata: {error}",
+    "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
+    "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
   "contextMenus": {
     "dirItem": {
@@ -955,7 +957,9 @@
       "openInNewTab": "Yeni sekmede aç",
       "addToFavorites": "Favorilere ekle",
       "removeFromFavorites": "Favorilerden kaldır",
-      "createLink": "Bağlantı oluştur"
+      "createLink": "Bağlantı oluştur",
+      "addToProjects": "Projelere ekle",
+      "removeFromProjects": "Projelerden kaldır"
     },
     "linkTypes": {
       "symlink": "Sembolik bağlantı",

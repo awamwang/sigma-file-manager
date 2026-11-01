@@ -705,7 +705,9 @@
     "addedToFavorites": "Đã thêm 0 mục vào mục yêu thích | Đã thêm 1 mục vào mục yêu thích | Đã thêm {n} mục vào mục yêu thích | Đã thêm {n} mục vào mục yêu thích",
     "createdNLinks": "Đã tạo 0 liên kết | Đã tạo 1 liên kết | Đã tạo {n} liên kết | Đã tạo {n} liên kết",
     "createdNOfNLinks": "Đã tạo {created} trên {total} liên kết",
-    "linkCreationPartialFailureDescription": "{count} liên kết thất bại. Lỗi đầu tiên: {error}"
+    "linkCreationPartialFailureDescription": "{count} liên kết thất bại. Lỗi đầu tiên: {error}",
+    "addedToProjects": "Đã thêm 0 mục vào dự án | Đã thêm 1 mục vào dự án | Đã thêm {n} mục vào dự án | Đã thêm {n} mục vào dự án",
+    "removedFromProjects": "Đã xóa 0 mục khỏi dự án | Đã xóa 1 mục khỏi dự án | Đã xóa {n} mục khỏi dự án | Đã xóa {n} mục khỏi dự án"
   },
   "contextMenus": {
     "dirItem": {
@@ -955,7 +957,9 @@
       "openInNewTab": "Mở trong thẻ mới",
       "addToFavorites": "Thêm vào yêu thích",
       "removeFromFavorites": "Xóa khỏi yêu thích",
-      "createLink": "Tạo liên kết"
+      "createLink": "Tạo liên kết",
+      "addToProjects": "Thêm vào dự án",
+      "removeFromProjects": "Xóa khỏi dự án"
     },
     "linkTypes": {
       "symlink": "Liên kết tượng trưng",

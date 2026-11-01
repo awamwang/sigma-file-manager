@@ -705,7 +705,9 @@
     "addedToFavorites": "お気に入りに 0 個のアイテムを追加しました | お気に入りに 1 個のアイテムを追加しました | 気に入りに {n} 個のアイテムをお追加しました | お気に入りに {n} 個のアイテムを追加しました",
     "createdNLinks": "0 個のリンクを作成しました | 1 個のリンクを作成しました | {n} 個のリンクを作成しました | {n} 個のリンクを作成しました",
     "createdNOfNLinks": "{total} 件中 {created} 件のリンクを作成しました",
-    "linkCreationPartialFailureDescription": "{count} 件のリンクに失敗しました。最初のエラー: {error}"
+    "linkCreationPartialFailureDescription": "{count} 件のリンクに失敗しました。最初のエラー: {error}",
+    "addedToProjects": "プロジェクトに 0 個のアイテムを追加しました | プロジェクトに 1 個のアイテムを追加しました | プロジェクトに {n} 個のアイテムを追加しました | プロジェクトに {n} 個のアイテムを追加しました",
+    "removedFromProjects": "プロジェクトから 0 個のアイテムを削除しました | プロジェクトから 1 個のアイテムを削除しました | プロジェクトから {n} 個のアイテムを削除しました | プロジェクトから {n} 個のアイテムを削除しました"
   },
   "contextMenus": {
     "dirItem": {
@@ -955,7 +957,9 @@
       "openInNewTab": "新しいタブで開く",
       "addToFavorites": "お気に入りに追加",
       "removeFromFavorites": "お気に入りから削除",
-      "createLink": "リンクを作成"
+      "createLink": "リンクを作成",
+      "addToProjects": "プロジェクトに追加",
+      "removeFromProjects": "プロジェクトから削除"
     },
     "linkTypes": {
       "symlink": "シンボリックリンク",

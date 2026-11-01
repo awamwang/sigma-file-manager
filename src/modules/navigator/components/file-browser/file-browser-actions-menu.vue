@@ -21,12 +21,15 @@ import {
   Share2Icon,
   SquarePlusIcon,
   StarIcon,
+  FolderPlusIcon,
+  FolderMinusIcon,
   UnplugIcon,
   InfoIcon,
 } from '@lucide/vue';
 import { useClipboardStore } from '@/stores/runtime/clipboard';
 import { usePlatformStore } from '@/stores/runtime/platform';
 import { useUserStatsStore } from '@/stores/storage/user-stats';
+import { useUserProjectsStore } from '@/stores/storage/user-projects';
 import { useShortcutsStore } from '@/stores/runtime/shortcuts';
 import type { DirEntry } from '@/types/dir-entry';
 import type { ContextMenuAction } from './types';
@@ -96,6 +99,7 @@ const { t } = useI18n();
 const clipboardStore = useClipboardStore();
 const platformStore = usePlatformStore();
 const userStatsStore = useUserStatsStore();
+const userProjectsStore = useUserProjectsStore();
 const shortcutsStore = useShortcutsStore();
 const selectedEntriesRef = toRef(props, 'selectedEntries');
 const { inlineEndSide } = useTextDirection();
@@ -107,6 +111,10 @@ const { isActionVisible, selectionStats } = useContextMenuItems(
 
 const allSelectedAreFavorites = computed(() => {
   return props.selectedEntries.every(entry => userStatsStore.isFavorite(entry.path));
+});
+
+const allSelectedAreProjects = computed(() => {
+  return props.selectedEntries.every(entry => userProjectsStore.isProject(entry.path));
 });
 
 const {
@@ -448,6 +456,21 @@ function handleCreateLink(linkKind: LinkCreationKind) {
       :fill="allSelectedAreFavorites ? 'currentColor' : 'none'"
     />
     <span>{{ allSelectedAreFavorites ? t('fileBrowser.actions.removeFromFavorites') : t('fileBrowser.actions.addToFavorites') }}</span>
+  </component>
+  <component
+    :is="menuItemComponent"
+    v-if="isActionVisible('toggle-project')"
+    @select="emitAction('toggle-project')"
+  >
+    <FolderMinusIcon
+      v-if="allSelectedAreProjects"
+      :size="16"
+    />
+    <FolderPlusIcon
+      v-else
+      :size="16"
+    />
+    <span>{{ allSelectedAreProjects ? t('fileBrowser.actions.removeFromProjects') : t('fileBrowser.actions.addToProjects') }}</span>
   </component>
   <div
     v-if="isActionVisible('edit-tags')"

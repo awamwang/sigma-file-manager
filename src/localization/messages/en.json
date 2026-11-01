@@ -734,7 +734,9 @@
     "printViewFileIsNotSupported": "Print: file is not supported",
     "createdNLinks": "Created 0 links | Created 1 link | Created {n} links | Created {n} links",
     "createdNOfNLinks": "Created {created} of {total} links",
-    "linkCreationPartialFailureDescription": "{count} links failed. First error: {error}"
+    "linkCreationPartialFailureDescription": "{count} links failed. First error: {error}",
+    "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
+    "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
   "contextMenus": {
     "dirItem": {
@@ -987,7 +989,9 @@
       "share": "Share over LAN",
       "openInNewTab": "Open in new tab",
       "addToFavorites": "Add to favorites",
-      "removeFromFavorites": "Remove from favorites"
+      "removeFromFavorites": "Remove from favorites",
+      "addToProjects": "Add to projects",
+      "removeFromProjects": "Remove from projects"
     },
     "linkTypes": {
       "symlink": "Symbolic link",

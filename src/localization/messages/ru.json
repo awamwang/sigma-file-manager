@@ -734,7 +734,9 @@
     "printViewFileIsNotSupported": "Печать: файл не поддерживается",
     "createdNLinks": "Создано 0 ссылок | Создана 1 ссылка | Создано {n} ссылки | Создано {n} ссылок",
     "createdNOfNLinks": "Создано ссылок: {created} из {total}",
-    "linkCreationPartialFailureDescription": "Не удалось создать ссылок: {count}. Первая ошибка: {error}"
+    "linkCreationPartialFailureDescription": "Не удалось создать ссылок: {count}. Первая ошибка: {error}",
+    "addedToProjects": "Добавлено 0 элементов в проекты | Добавлено 1 элемент в проекты | Добавлено {n} элементов в проекты | Добавлено {n} элементов в проекты",
+    "removedFromProjects": "Удалено 0 элементов из проектов | Удалено 1 элемент из проектов | Удалено {n} элементов из проектов | Удалено {n} элементов из проектов"
   },
   "contextMenus": {
     "dirItem": {
@@ -985,7 +987,9 @@
       "openInNewTab": "Открыть в новой вкладке",
       "addToFavorites": "Добавить в избранное",
       "removeFromFavorites": "Удалить из избранного",
-      "createLink": "Создать ссылку"
+      "createLink": "Создать ссылку",
+      "addToProjects": "Добавить в проекты",
+      "removeFromProjects": "Удалить из проектов"
     },
     "linkTypes": {
       "symlink": "Символическая ссылка",

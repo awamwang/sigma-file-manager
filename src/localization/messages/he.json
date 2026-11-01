@@ -734,7 +734,9 @@
     "printViewFileIsNotSupported": "הדפסה: הקובץ אינו נתמך",
     "createdNLinks": "נוצרו 0 קישורים | נוצר קישור אחד | נוצרו {n} קישורים | נוצרו {n} קישורים",
     "createdNOfNLinks": "נוצרו {created} מתוך {total} קישורים",
-    "linkCreationPartialFailureDescription": "{count} קישורים נכשלו. השגיאה הראשונה: {error}"
+    "linkCreationPartialFailureDescription": "{count} קישורים נכשלו. השגיאה הראשונה: {error}",
+    "addedToProjects": "נוספו 0 פריטים לפרויקטים | נוסף פריט אחד לפרויקטים | נוספו {n} פריטים לפרויקטים | נוספו {n} פריטים לפרויקטים",
+    "removedFromProjects": "הוסרו 0 פריטים מהפרויקטים | הוסר פריט אחד מהפרויקטים | הוסרו {n} פריטים מהפרויקטים | הוסרו {n} פריטים מהפרויקטים"
   },
   "contextMenus": {
     "dirItem": {
@@ -987,7 +989,9 @@
       "share": "שתף ברשת המקומית",
       "openInNewTab": "פתח בלשונית חדשה",
       "addToFavorites": "הוסף למועדפים",
-      "removeFromFavorites": "הסר מהמועדפים"
+      "removeFromFavorites": "הסר מהמועדפים",
+      "addToProjects": "הוסף לפרויקטים",
+      "removeFromProjects": "הסר מהפרויקטים"
     },
     "linkTypes": {
       "symlink": "קישור סימבולי",

@@ -734,7 +734,9 @@
     "printViewFileIsNotSupported": "پرنٹ: فائل معاون نہیں",
     "createdNLinks": "0 لنکس بنائے گئے | 1 لنک بنایا گیا | {n} لنکس بنائے گئے | {n} لنکس بنائے گئے",
     "createdNOfNLinks": "{total} میں سے {created} لنکس بنائے گئے",
-    "linkCreationPartialFailureDescription": "{count} لنکس ناکام ہوئے۔ پہلی خرابی: {error}"
+    "linkCreationPartialFailureDescription": "{count} لنکس ناکام ہوئے۔ پہلی خرابی: {error}",
+    "addedToProjects": "0 پروجیکٹس میں شامل ہوئیں | 1 پروجیکٹ میں شامل ہوا | {n} پروجیکٹس میں شامل ہوئیں | {n} پروجیکٹس میں شامل ہوئیں",
+    "removedFromProjects": "0 پروجیکٹس سے ہٹائیں | 1 پروجیکٹ سے ہٹایا | {n} پروجیکٹس سے ہٹائیں | {n} پروجیکٹس سے ہٹائیں"
   },
   "contextMenus": {
     "dirItem": {
@@ -985,7 +987,9 @@
       "openInNewTab": "نئے ٹیب میں",
       "addToFavorites": "پسندیدہ میں",
       "removeFromFavorites": "پسندیدہ سے",
-      "createLink": "لنک بنائیں"
+      "createLink": "لنک بنائیں",
+      "addToProjects": "پروجیکٹس میں شامل کریں",
+      "removeFromProjects": "پروجیکٹس سے ہٹائیں"
     },
     "linkTypes": {
       "symlink": "علامتی لنک",

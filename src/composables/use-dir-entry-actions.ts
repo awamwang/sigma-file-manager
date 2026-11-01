@@ -410,6 +410,38 @@ export function useDirEntryActions() {
     });
   }
 
+  async function toggleProjects(entries: DirEntry[]) {
+    const directories = entries.filter(entry => entry.is_dir);
+
+    if (directories.length === 0) {
+      return;
+    }
+
+    const allAreProjects = directories.every(entry => userProjectsStore.isProject(entry.path));
+
+    for (const entry of directories) {
+      if (allAreProjects) {
+        await userProjectsStore.removeProject(entry.path);
+      }
+      else if (!userProjectsStore.isProject(entry.path)) {
+        await userProjectsStore.addProject(entry.path);
+      }
+    }
+
+    const message = allAreProjects
+      ? t('notifications.removedFromProjects', directories.length)
+      : t('notifications.addedToProjects', directories.length);
+
+    toast.custom(markRaw(ToastStatic), {
+      componentProps: {
+        data: {
+          title: message,
+          description: '',
+        },
+      },
+    });
+  }
+
   async function quickView(entries: DirEntry[]) {
     const fileEntry = entries.find(entry => entry.is_file);
 
@@ -513,6 +545,9 @@ export function useDirEntryActions() {
         break;
       case 'toggle-favorite':
         toggleFavorites(entries);
+        break;
+      case 'toggle-project':
+        void toggleProjects(entries);
         break;
       case 'copy-path':
         copyPath(entries);

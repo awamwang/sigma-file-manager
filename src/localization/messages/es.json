@@ -705,7 +705,9 @@
     "addedToFavorites": "Added 0 items to favorites | Added 1 item to favorites | Added {n} items to favorites | Added {n} items to favorites",
     "createdNLinks": "Creados 0 enlaces | Creado 1 enlace | Creados {n} enlaces | Creados {n} enlaces",
     "createdNOfNLinks": "Creados {created} de {total} enlaces",
-    "linkCreationPartialFailureDescription": "Fallaron {count} enlaces. Primer error: {error}"
+    "linkCreationPartialFailureDescription": "Fallaron {count} enlaces. Primer error: {error}",
+    "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
+    "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
   "contextMenus": {
     "dirItem": {
@@ -957,7 +959,9 @@
       "openInNewTab": "Abrir en nueva pestaña",
       "addToFavorites": "Añadir a favoritos",
       "removeFromFavorites": "Quitar de favoritos",
-      "createLink": "Crear enlace"
+      "createLink": "Crear enlace",
+      "addToProjects": "Añadir a proyectos",
+      "removeFromProjects": "Quitar de proyectos"
     },
     "linkTypes": {
       "symlink": "Enlace simbólico",

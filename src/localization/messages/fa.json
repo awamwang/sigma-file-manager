@@ -701,7 +701,9 @@
     "addedToFavorites": "Added 0 items to favorites | Added 1 item to favorites | Added {n} items to favorites | Added {n} items to favorites",
     "createdNLinks": "۰ پیوند ایجاد شد | ۱ پیوند ایجاد شد | {n} پیوند ایجاد شد | {n} پیوند ایجاد شد",
     "createdNOfNLinks": "{created} از {total} لینک ایجاد شد",
-    "linkCreationPartialFailureDescription": "{count} لینک ناموفق بود. اولین خطا: {error}"
+    "linkCreationPartialFailureDescription": "{count} لینک ناموفق بود. اولین خطا: {error}",
+    "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
+    "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
   "contextMenus": {
     "dirItem": {
@@ -951,7 +953,9 @@
       "openInNewTab": "باز کردن در برگه جدید",
       "addToFavorites": "افزودن به موردعلاقه‌ها",
       "removeFromFavorites": "حذف از موردعلاقه‌ها",
-      "createLink": "ایجاد پیوند"
+      "createLink": "ایجاد پیوند",
+      "addToProjects": "افزودن به پروژه‌ها",
+      "removeFromProjects": "حذف از پروژه‌ها"
     },
     "linkTypes": {
       "symlink": "پیوند نمادین",

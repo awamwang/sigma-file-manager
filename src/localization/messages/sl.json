@@ -734,7 +734,9 @@
     "printViewFileIsNotSupported": "Tiskanje: datoteka ni podprta",
     "createdNLinks": "Ustvarjenih 0 povezav | Ustvarjena 1 povezava | Ustvarjene {n} povezave | Ustvarjenih {n} povezav",
     "createdNOfNLinks": "Ustvarjenih {created} od {total} povezav",
-    "linkCreationPartialFailureDescription": "{count} povezav ni uspelo. Prva napaka: {error}"
+    "linkCreationPartialFailureDescription": "{count} povezav ni uspelo. Prva napaka: {error}",
+    "addedToProjects": "Dodano 0 predmetov v projekte | Dodano 1 predmet v projekte | Dodano {n} predmetov v projekte | Dodano {n} predmetov v projekte",
+    "removedFromProjects": "Odstranjeno 0 predmetov iz projektov | Odstranjeno 1 predmet iz projektov | Odstranjeno {n} predmetov iz projektov | Odstranjeno {n} predmetov iz projektov"
   },
   "contextMenus": {
     "dirItem": {
@@ -985,7 +987,9 @@
       "openInNewTab": "Odpri v novem zavihku",
       "addToFavorites": "Dodaj med priljubljene",
       "removeFromFavorites": "Odstrani iz priljubljenih",
-      "createLink": "Ustvari povezavo"
+      "createLink": "Ustvari povezavo",
+      "addToProjects": "Dodaj med projekte",
+      "removeFromProjects": "Odstrani iz projektov"
     },
     "linkTypes": {
       "symlink": "Simbolična povezava",

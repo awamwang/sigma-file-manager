@@ -734,7 +734,9 @@
     "printViewFileIsNotSupported": "Տպել. ֆայլը չի աջակցվում",
     "createdNLinks": "Ստեղծվել է 0 հղում | Ստեղծվել է 1 հղում | Ստեղծվել է {n} հղում | Ստեղծվել է {n} հղում",
     "createdNOfNLinks": "Ստեղծվել է {created}/{total} հղում",
-    "linkCreationPartialFailureDescription": "{count} հղում չհաջողվեց։ Առաջին սխալը՝ {error}"
+    "linkCreationPartialFailureDescription": "{count} հղում չհաջողվեց։ Առաջին սխալը՝ {error}",
+    "addedToProjects": "Ավելացվեց 0 իր նախագծերին | Ավելացվեց 1 իր նախագծերին | Ավելացվեց {n} իր նախագծերին | Ավելացվեց {n} իր նախագծերին",
+    "removedFromProjects": "Ջնջվեց 0 իր նախագծերից | Ջնջվեց 1 իր նախագծերից | Ջնջվեց {n} իր նախագծերից | Ջնջվեց {n} իր նախագծերից"
   },
   "contextMenus": {
     "dirItem": {
@@ -987,7 +989,9 @@
       "share": "Կիսվել LAN-ի միջոցով",
       "openInNewTab": "Բացել նոր թաբում",
       "addToFavorites": "Ավելացնել սիրվածներին",
-      "removeFromFavorites": "Ջնջել սիրվածներից"
+      "removeFromFavorites": "Ջնջել սիրվածներից",
+      "addToProjects": "Ավելացնել նախագծերին",
+      "removeFromProjects": "Ջնջել նախագծերից"
     },
     "linkTypes": {
       "symlink": "Սիմվոլիկ հղում",

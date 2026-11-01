@@ -74,6 +74,11 @@ const CONTEXT_MENU_ITEMS: ContextMenuItemConfig[] = [
     entryTypes: ['file', 'directory'],
   },
   {
+    action: 'toggle-project',
+    selectionTypes: ['single', 'multiple'],
+    entryTypes: ['directory'],
+  },
+  {
     action: 'edit-tags',
     selectionTypes: ['single', 'multiple'],
     entryTypes: ['file', 'directory'],
