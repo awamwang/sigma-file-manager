@@ -1274,7 +1274,8 @@
       "trash": "Papierkorb",
       "deletePermanent": "Löschen",
       "archive": "Archiv",
-      "dirSize": "Ordnergröße"
+      "dirSize": "Ordnergröße",
+      "extension": "Erweiterung"
     },
     "operationStatusShort": {
       "completed": "Erfolg",

@@ -121,7 +121,8 @@
       "trash": "Trash",
       "deletePermanent": "Delete",
       "archive": "Archive",
-      "dirSize": "Folder size"
+      "dirSize": "Folder size",
+      "extension": "Extension"
     },
     "operationStatusShort": {
       "completed": "Success",

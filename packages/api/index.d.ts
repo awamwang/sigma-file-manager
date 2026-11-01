@@ -735,6 +735,13 @@ export interface SigmaExtensionAPI {
      * Writes file paths to the system clipboard.
      */
     clipboardWriteFiles(paths: string[], operation?: 'copy' | 'move'): Promise<void>;
+    /**
+     * Runs a task with progress reporting.
+     * `location: 'notification'` (default) shows a cancellable progress toast.
+     * `location: 'statusBar'` registers the task as an operation in the app's
+     * Status Center with the extension's name and icon; cancelling it from the
+     * Status Center triggers the provided cancellation token.
+     */
     withProgress<T>(
       options: ProgressOptions,
       task: (progress: Progress, token: CancellationToken) => Promise<T>

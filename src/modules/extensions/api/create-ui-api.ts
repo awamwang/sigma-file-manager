@@ -28,6 +28,7 @@ import { readExtensionClipboardSourceContext } from '@/modules/extensions/api/cl
 import { toast, ToastStatic, ToastProgress } from '@/components/ui/toaster';
 import { createModal } from '@/modules/extensions/api/modal-state';
 import { showExtensionDialog } from '@/modules/extensions/api/dialog-state';
+import { runStatusCenterProgress } from '@/modules/extensions/api/ui-progress';
 import ExtensionToolbarView from '@/modules/extensions/components/extension-toolbar-view.vue';
 import type { ExtensionContext } from '@/modules/extensions/api/extension-context';
 import type { Disposable } from '@/types/extension';
@@ -205,6 +206,10 @@ export function createUiAPI(context: ExtensionContext) {
     ): Promise<T> => {
       if (!context.hasPermission('notifications')) {
         throw new Error(context.t('extensions.api.permissionDenied', { permission: 'notifications' }));
+      }
+
+      if (options.location === 'statusBar') {
+        return runStatusCenterProgress(context, options, task);
       }
 
       let currentProgress = 0;

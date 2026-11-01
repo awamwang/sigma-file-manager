@@ -121,7 +121,8 @@
       "trash": "Աղբարկղ",
       "deletePermanent": "Ջնջել",
       "archive": "Արխիվ",
-      "dirSize": "Պանակի չափսը"
+      "dirSize": "Պանակի չափսը",
+      "extension": "Ընդլայնում"
     },
     "operationStatusShort": {
       "completed": "Հաջողություն",

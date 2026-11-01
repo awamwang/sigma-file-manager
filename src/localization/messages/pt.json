@@ -1273,7 +1273,8 @@
       "trash": "Lixo",
       "deletePermanent": "Apagar",
       "archive": "Arquivo",
-      "dirSize": "Tamanho da pasta"
+      "dirSize": "Tamanho da pasta",
+      "extension": "Extensão"
     },
     "operationStatusShort": {
       "completed": "Sucesso",

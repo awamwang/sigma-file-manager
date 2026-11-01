@@ -121,7 +121,8 @@
       "trash": "Koš",
       "deletePermanent": "Brisanje",
       "archive": "Arhiv",
-      "dirSize": "Velikost mape"
+      "dirSize": "Velikost mape",
+      "extension": "Razširitev"
     },
     "operationStatusShort": {
       "completed": "Uspeh",

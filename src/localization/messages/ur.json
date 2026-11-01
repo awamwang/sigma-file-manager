@@ -121,7 +121,8 @@
       "trash": "ٹریش",
       "deletePermanent": "حذف",
       "archive": "آرکائیو",
-      "dirSize": "فولڈر سائز"
+      "dirSize": "فولڈر سائز",
+      "extension": "ایکسٹینشن"
     },
     "operationStatusShort": {
       "completed": "کامیابی",

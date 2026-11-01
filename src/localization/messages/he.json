@@ -121,7 +121,8 @@
       "trash": "אשפה",
       "deletePermanent": "מחיקה",
       "archive": "ארכיון",
-      "dirSize": "גודל תיקייה"
+      "dirSize": "גודל תיקייה",
+      "extension": "תוסף"
     },
     "operationStatusShort": {
       "completed": "הצליח",

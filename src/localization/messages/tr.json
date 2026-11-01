@@ -1274,7 +1274,8 @@
       "trash": "Çöp",
       "deletePermanent": "Sil",
       "archive": "Arşiv",
-      "dirSize": "Klasör boyutu"
+      "dirSize": "Klasör boyutu",
+      "extension": "Uzantı"
     },
     "operationStatusShort": {
       "completed": "Başarılı",

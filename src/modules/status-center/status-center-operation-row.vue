@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useStatusCenterStore, type Operation, type OperationStatus, type OperationType } from '@/stores/runtime/status-center';
 import { useDirSizesStore } from '@/stores/runtime/dir-sizes';
+import ExtensionIcon from '@/modules/extensions/components/extension-icon.vue';
 import { formatBytes } from '@/modules/navigator/components/file-browser/utils';
 import { useCancelOperation } from './use-cancel-operation';
 
@@ -36,12 +37,13 @@ const isActive = computed(() =>
   || props.operation.status === 'cancelling',
 );
 
-const isCancellable = computed(() =>
-  props.operation.status === 'in-progress'
-  || props.operation.status === 'pending',
-);
-
 const isCancelling = computed(() => props.operation.status === 'cancelling');
+
+const isCancellable = computed(() =>
+  (props.operation.status === 'in-progress'
+    || props.operation.status === 'pending')
+  && props.operation.cancellable !== false,
+);
 
 function operationTypeShortKey(type: OperationType): string {
   if (type === 'deleteTrash') {
@@ -100,7 +102,10 @@ const operationLabel = computed(() => {
     return primaryLabelForTransferOperation(props.operation);
   }
 
-  if (props.operation.type === 'archive') {
+  if (
+    props.operation.type === 'archive'
+    || props.operation.type === 'extension'
+  ) {
     return props.operation.label;
   }
 
@@ -192,6 +197,20 @@ function isRedundantDeleteProgressMessage(
 }
 
 function buildOperationDetails(operation: Operation): string {
+  if (operation.type === 'extension') {
+    const segments: string[] = [];
+
+    if (operation.progress != null && isActive.value) {
+      segments.push(`${operation.progress}%`);
+    }
+
+    if (operation.message) {
+      segments.push(operation.message);
+    }
+
+    return segments.join(' · ');
+  }
+
   if (operation.type === 'dir-size') {
     if (operation.status === 'error') {
       return formatPath(operation.path);
@@ -359,6 +378,12 @@ function handleDismiss() {
     :class="`status-center-operation-row--${operation.status}`"
   >
     <div class="status-center-operation-row__status-icon">
+      <ExtensionIcon
+        v-if="operation.type === 'extension' && isActive"
+        :extension-id="operation.extensionId ?? operation.id"
+        :icon-path="operation.extensionIconPath"
+        :size="16"
+      />
       <component
         :is="statusIcon"
         :size="14"
@@ -461,6 +486,7 @@ function handleDismiss() {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  gap: 4px;
 }
 
 .status-center-operation-row__spinner {

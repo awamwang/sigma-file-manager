@@ -1274,7 +1274,8 @@
       "trash": "ゴミ箱",
       "deletePermanent": "削除",
       "archive": "アーカイブ",
-      "dirSize": "フォルダー サイズ"
+      "dirSize": "フォルダー サイズ",
+      "extension": "拡張機能"
     },
     "operationStatusShort": {
       "completed": "成功",

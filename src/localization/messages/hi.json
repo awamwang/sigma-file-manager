@@ -121,7 +121,8 @@
       "trash": "ट्रैश",
       "deletePermanent": "हटाएँ",
       "archive": "संग्रह",
-      "dirSize": "फ़ोल्डर आकार"
+      "dirSize": "फ़ोल्डर आकार",
+      "extension": "एक्सटेंशन"
     },
     "operationStatusShort": {
       "completed": "सफलता",

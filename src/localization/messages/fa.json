@@ -1274,7 +1274,8 @@
       "trash": "زباله",
       "deletePermanent": "حذف",
       "archive": "بایگانی",
-      "dirSize": "اندازه پوشه"
+      "dirSize": "اندازه پوشه",
+      "extension": "افزونه"
     },
     "operationStatusShort": {
       "completed": "موفق",

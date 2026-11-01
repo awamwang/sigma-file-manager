@@ -1274,7 +1274,8 @@
       "trash": "Cestino",
       "deletePermanent": "Elimina",
       "archive": "Archivio",
-      "dirSize": "Dimensione cartella"
+      "dirSize": "Dimensione cartella",
+      "extension": "Estensione"
     },
     "operationStatusShort": {
       "completed": "Completato",

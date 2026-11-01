@@ -4,6 +4,7 @@
 
 import { useI18n } from 'vue-i18n';
 import { useStatusCenterStore, type Operation } from '@/stores/runtime/status-center';
+import { requestExtensionOperationCancel } from '@/modules/extensions/api/extension-progress';
 import { useArchiveJobsStore } from '@/stores/runtime/archive-jobs';
 import { useCopyMoveJobsStore } from '@/stores/runtime/copy-move-jobs';
 import { useDeleteJobsStore } from '@/stores/runtime/delete-jobs';
@@ -31,6 +32,11 @@ export function useCancelOperation() {
       status: 'cancelling',
       message: t('statusCenter.cancelling'),
     });
+
+    if (operation.type === 'extension') {
+      requestExtensionOperationCancel(operation.id);
+      return;
+    }
 
     if (operation.type === 'archive') {
       await archiveJobsStore.cancelJob(operation.id);

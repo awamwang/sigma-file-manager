@@ -17,6 +17,11 @@ const { invokeMock } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
 }));
 
+const { runStatusCenterProgressMock, sonnerToastCustomMock } = vi.hoisted(() => ({
+  runStatusCenterProgressMock: vi.fn(),
+  sonnerToastCustomMock: vi.fn(),
+}));
+
 vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
   writeText: writeTextMock,
   writeHtml: writeHtmlMock,
@@ -28,12 +33,16 @@ vi.mock('@tauri-apps/api/core', () => ({
 
 vi.mock('vue-sonner', () => ({
   toast: {
-    custom: vi.fn(),
+    custom: sonnerToastCustomMock,
     dismiss: vi.fn(),
     promise: vi.fn(),
     getHistory: vi.fn(() => []),
     getToasts: vi.fn(() => []),
   },
+}));
+
+vi.mock('@/modules/extensions/api/ui-progress', () => ({
+  runStatusCenterProgress: runStatusCenterProgressMock,
 }));
 
 vi.mock('vue', async () => {
@@ -96,6 +105,70 @@ describe('createUiAPI', () => {
     writeTextMock.mockReset();
     writeHtmlMock.mockReset();
     invokeMock.mockReset();
+    runStatusCenterProgressMock.mockReset();
+    sonnerToastCustomMock.mockReset();
+  });
+
+  describe('withProgress', () => {
+    it('blocks without permission', async () => {
+      const uiApi = createUiAPI(createContext());
+      const task = vi.fn(async () => 'done');
+
+      await expect(
+        uiApi.withProgress({
+          subtitle: 'Working',
+          location: 'statusBar',
+        }, task),
+      ).rejects.toThrow(
+        'extensions.api.permissionDenied:notifications',
+      );
+
+      expect(runStatusCenterProgressMock).not.toHaveBeenCalled();
+      expect(sonnerToastCustomMock).not.toHaveBeenCalled();
+    });
+
+    it('routes statusBar progress to the Status Center operation', async () => {
+      runStatusCenterProgressMock.mockResolvedValueOnce('status-bar-result');
+      const context = createContext(['notifications' as ExtensionPermission]);
+      const uiApi = createUiAPI(context);
+      const task = vi.fn(async () => 'done');
+
+      const result = await uiApi.withProgress({
+        subtitle: 'Working',
+        location: 'statusBar',
+      }, task);
+
+      expect(result).toBe('status-bar-result');
+      expect(runStatusCenterProgressMock).toHaveBeenCalledWith(context, {
+        subtitle: 'Working',
+        location: 'statusBar',
+      }, task);
+      expect(sonnerToastCustomMock).not.toHaveBeenCalled();
+    });
+
+    it('shows a progress toast for the default notification location', async () => {
+      vi.useFakeTimers();
+
+      try {
+        const uiApi = createUiAPI(createContext(['notifications' as ExtensionPermission]));
+        const taskPromise = uiApi.withProgress({ subtitle: 'Working' }, async (progress) => {
+          progress.report({ value: 50 });
+          return 'toast-result';
+        });
+
+        await vi.runAllTimersAsync();
+
+        const result = await taskPromise;
+
+        expect(result).toBe('toast-result');
+      }
+      finally {
+        vi.useRealTimers();
+      }
+
+      expect(runStatusCenterProgressMock).not.toHaveBeenCalled();
+      expect(sonnerToastCustomMock).toHaveBeenCalled();
+    });
   });
 
   describe('copyText', () => {

@@ -1274,7 +1274,8 @@
       "trash": "回收站",
       "deletePermanent": "删除",
       "archive": "归档",
-      "dirSize": "文件夹大小"
+      "dirSize": "文件夹大小",
+      "extension": "扩展"
     },
     "operationStatusShort": {
       "completed": "成功",

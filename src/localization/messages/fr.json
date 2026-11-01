@@ -1274,7 +1274,8 @@
       "trash": "Corbeille",
       "deletePermanent": "Supprimer",
       "archive": "Archive",
-      "dirSize": "Taille du dossier"
+      "dirSize": "Taille du dossier",
+      "extension": "Extension"
     },
     "operationStatusShort": {
       "completed": "Réussi",

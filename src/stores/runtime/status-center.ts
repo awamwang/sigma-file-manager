@@ -11,7 +11,8 @@ export type OperationType
     | 'move'
     | 'deleteTrash'
     | 'deletePermanent'
-    | 'archive';
+    | 'archive'
+    | 'extension';
 export type OperationStatus
   = | 'pending'
     | 'in-progress'
@@ -31,6 +32,10 @@ export interface Operation {
   processedCount?: number;
   totalCount?: number;
   sourceDisplayName?: string;
+  extensionId?: string;
+  extensionName?: string;
+  extensionIconPath?: string;
+  cancellable?: boolean;
   startedAt: number;
   completedAt?: number;
 }

@@ -121,7 +121,8 @@
       "trash": "Корзина",
       "deletePermanent": "Удаление",
       "archive": "Архив",
-      "dirSize": "Размер папки"
+      "dirSize": "Размер папки",
+      "extension": "Расширение"
     },
     "operationStatusShort": {
       "completed": "Успех",

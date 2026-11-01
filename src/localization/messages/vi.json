@@ -1274,7 +1274,8 @@
       "trash": "Thùng rác",
       "deletePermanent": "Xóa",
       "archive": "Lưu trữ",
-      "dirSize": "Kích thước thư mục"
+      "dirSize": "Kích thước thư mục",
+      "extension": "Tiện ích mở rộng"
     },
     "operationStatusShort": {
       "completed": "Thành công",

@@ -1274,7 +1274,8 @@
       "trash": "Papelera",
       "deletePermanent": "Eliminar",
       "archive": "Archivo",
-      "dirSize": "Tamaño de carpeta"
+      "dirSize": "Tamaño de carpeta",
+      "extension": "Extensión"
     },
     "operationStatusShort": {
       "completed": "Correcto",
