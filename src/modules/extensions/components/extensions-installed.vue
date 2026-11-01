@@ -12,6 +12,7 @@ import {
   ArrowBigUpDashIcon,
   PackageOpenIcon,
   FolderOpenIcon,
+  PackagePlusIcon,
   XIcon,
   Settings2Icon,
 } from '@lucide/vue';
@@ -237,6 +238,14 @@ function getLocalReinstallButtonTitle(extensionId: string): string {
           </div>
         </div>
         <div class="extensions-installed__stats-actions">
+          <Button
+            variant="outline"
+            :disabled="isInstallingLocal"
+            @click="handleInstallLocal"
+          >
+            <PackagePlusIcon :size="16" />
+            {{ t('extensions.installExtensionFromFolder') }}
+          </Button>
           <Button
             variant="outline"
             @click="navigateToExtensionsFolder"
