@@ -4,7 +4,7 @@ Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 -->
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
 import type { DirEntry } from '@/types/dir-entry';
@@ -123,7 +123,7 @@ function buildCombinedMenuItems(
 
 async function loadShellContextMenu() {
   const entries = props.selectedEntries;
-  if (entries.length === 0) return;
+  if (entries.length === 0 || isLoading.value) return;
 
   const cacheKey = entries.map(entry => entry.path).join('|');
   if (cacheKey === hasLoadedForPath.value && menuItems.value.length > 0) return;
@@ -185,9 +185,11 @@ async function loadShellContextMenu() {
   }
 }
 
-onMounted(() => {
-  loadShellContextMenu();
-});
+function handleSubmenuOpenChange(isOpen: boolean) {
+  if (isOpen) {
+    loadShellContextMenu();
+  }
+}
 
 async function invokeMenuItem(item: MenuListItem) {
   if (item.isSeparator) return;
@@ -227,7 +229,7 @@ async function invokeMenuItem(item: MenuListItem) {
 </script>
 
 <template>
-  <ContextMenuSub>
+  <ContextMenuSub @update:open="handleSubmenuOpenChange">
     <ContextMenuSubTrigger>
       <MoreHorizontalIcon :size="16" />
       <span>{{ triggerLabel }}</span>

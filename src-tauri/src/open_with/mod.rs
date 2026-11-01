@@ -6,6 +6,9 @@ mod types;
 mod utils;
 
 #[cfg(target_os = "windows")]
+pub(crate) mod helper;
+
+#[cfg(target_os = "windows")]
 mod windows;
 
 #[cfg(target_os = "linux")]
@@ -20,11 +23,137 @@ use utils::canonicalize_path;
 #[cfg(windows)]
 use utils::{path_for_selection, prepare_shell_path};
 
+// Generous enough for a cold helper start plus a full modern-menu enumeration,
+// while still bounding how long a deadlocked extension can stall the submenu.
+#[cfg(target_os = "windows")]
+const SHELL_EXTENSION_QUERY_TIMEOUT: std::time::Duration =
+    std::time::Duration::from_millis(4000);
+
+#[cfg(target_os = "windows")]
+const MAX_SHELL_HELPER_PROCESSES: usize = 8;
+
+#[cfg(target_os = "windows")]
+static SHELL_HELPER_PROCESSES: std::sync::atomic::AtomicUsize =
+    std::sync::atomic::AtomicUsize::new(0);
+
+#[cfg(target_os = "windows")]
+struct ShellHelperSlot;
+
+#[cfg(target_os = "windows")]
+impl ShellHelperSlot {
+    fn acquire() -> Option<Self> {
+        use std::sync::atomic::Ordering;
+
+        let mut current = SHELL_HELPER_PROCESSES.load(Ordering::Acquire);
+        loop {
+            if current >= MAX_SHELL_HELPER_PROCESSES {
+                return None;
+            }
+
+            match SHELL_HELPER_PROCESSES.compare_exchange_weak(
+                current,
+                current + 1,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(_) => return Some(Self),
+                Err(observed) => current = observed,
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+impl Drop for ShellHelperSlot {
+    fn drop(&mut self) {
+        SHELL_HELPER_PROCESSES.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+/// Runs a shell-extension query in a disposable child process so a deadlocking
+/// extension can neither block the host main thread nor keep the host's module
+/// loader lock hostage. A helper that overruns the timeout is killed.
+#[cfg(target_os = "windows")]
+async fn run_shell_extension_task<T>(
+    operation: &'static str,
+    paths: Vec<String>,
+) -> Result<T, String>
+where
+    T: serde::de::DeserializeOwned,
+{
+    use std::process::Stdio;
+    use tokio::io::AsyncWriteExt;
+
+    // Keeps the helper from flashing a console window next to the app.
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+    let _slot = ShellHelperSlot::acquire()
+        .ok_or_else(|| "Too many shell extension queries are still running".to_string())?;
+
+    let executable = std::env::current_exe()
+        .map_err(|error| format!("Failed to locate the application executable: {error}"))?;
+    let mut child = tokio::process::Command::new(executable)
+        .arg(helper::SHELL_HELPER_FLAG)
+        .arg(operation)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .creation_flags(CREATE_NO_WINDOW)
+        .kill_on_drop(true)
+        .spawn()
+        .map_err(|error| format!("Failed to start the shell extension helper: {error}"))?;
+
+    if let Some(mut stdin) = child.stdin.take() {
+        let payload = serde_json::to_vec(&paths)
+            .map_err(|error| format!("Failed to encode shell extension request: {error}"))?;
+
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(1), async move {
+            let _ = stdin.write_all(&payload).await;
+            let _ = stdin.shutdown().await;
+        })
+        .await;
+    }
+
+    let output =
+        match tokio::time::timeout(SHELL_EXTENSION_QUERY_TIMEOUT, child.wait_with_output()).await {
+            Ok(Ok(output)) => output,
+            Ok(Err(error)) => return Err(format!("Shell extension helper failed: {error}")),
+            Err(_) => return Err("Shell extension query timed out".to_string()),
+        };
+
+    if !output.status.success() {
+        return Err(format!(
+            "Shell extension helper exited with code {}",
+            output.status.code().unwrap_or(-1)
+        ));
+    }
+
+    serde_json::from_slice(&output.stdout)
+        .map_err(|error| format!("Shell extension helper returned invalid data: {error}"))
+}
+
 #[tauri::command]
-pub fn get_associated_programs(file_path: String) -> GetAssociatedProgramsResult {
+pub async fn get_associated_programs(file_path: String) -> GetAssociatedProgramsResult {
     #[cfg(target_os = "windows")]
     {
-        windows::get_associated_programs_impl(&file_path)
+        match run_shell_extension_task(
+            helper::OPERATION_ASSOCIATED_PROGRAMS,
+            vec![file_path],
+        )
+        .await
+        {
+            Ok(result) => result,
+            Err(error) => {
+                log::warn!("get_associated_programs failed: {error}");
+                GetAssociatedProgramsResult {
+                    success: false,
+                    recommended_programs: vec![],
+                    other_programs: vec![],
+                    default_program: None,
+                    error: Some(error),
+                }
+            }
+        }
     }
     #[cfg(target_os = "linux")]
     {
@@ -199,10 +328,25 @@ pub fn open_native_open_with_dialog(file_path: String) -> OpenWithResult {
 }
 
 #[tauri::command]
-pub fn get_shell_context_menu(file_path: String) -> GetShellContextMenuResult {
+pub async fn get_shell_context_menu(file_path: String) -> GetShellContextMenuResult {
     #[cfg(target_os = "windows")]
     {
-        windows::get_shell_context_menu_impl(&file_path)
+        match run_shell_extension_task(
+            helper::OPERATION_LEGACY_CONTEXT_MENU,
+            vec![file_path],
+        )
+        .await
+        {
+            Ok(result) => result,
+            Err(error) => {
+                log::warn!("get_shell_context_menu failed: {error}");
+                GetShellContextMenuResult {
+                    success: false,
+                    items: vec![],
+                    error: Some(error),
+                }
+            }
+        }
     }
     #[cfg(not(target_os = "windows"))]
     {
@@ -236,10 +380,21 @@ pub fn invoke_shell_context_menu_item(
 }
 
 #[tauri::command]
-pub fn get_modern_context_menu(file_paths: Vec<String>) -> GetShellContextMenuResult {
+pub async fn get_modern_context_menu(file_paths: Vec<String>) -> GetShellContextMenuResult {
     #[cfg(target_os = "windows")]
     {
-        windows::get_modern_context_menu_impl(&file_paths)
+        match run_shell_extension_task(helper::OPERATION_MODERN_CONTEXT_MENU, file_paths).await
+        {
+            Ok(result) => result,
+            Err(error) => {
+                log::warn!("get_modern_context_menu failed: {error}");
+                GetShellContextMenuResult {
+                    success: false,
+                    items: vec![],
+                    error: Some(error),
+                }
+            }
+        }
     }
     #[cfg(not(target_os = "windows"))]
     {

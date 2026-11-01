@@ -252,6 +252,13 @@ fn handle_second_instance(app: &tauri::AppHandle, argv: Vec<String>, cwd: String
     }
 }
 
+/// Handles the hidden shell-extension helper invocation. Returns `true` when the
+/// process was started as a helper and must not continue into the app runtime.
+#[cfg(windows)]
+pub fn run_shell_extension_helper_if_requested() -> bool {
+    open_with::helper::run_if_requested()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     app_dirs::prepare_isolated_environment();
