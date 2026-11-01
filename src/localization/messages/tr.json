@@ -718,6 +718,19 @@
     "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
     "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
+  "projectsPicker": {
+    "title": "Projeler",
+    "openProject": "Proje aç...",
+    "addCurrentFolder": "Geçerli klasörü projelere ekle",
+    "searchPlaceholder": "Projelerde ara...",
+    "noResults": "Aramanızla eşleşen proje yok",
+    "emptyTitle": "Henüz proje yok",
+    "emptyDescription": "Bir klasöre sağ tıklayıp \"Projelere ekle\" seçeneğini seçin veya komut paletinden \"Geçerli klasörü projelere ekle\" komutunu çalıştırın.",
+    "noActiveFolder": "Etkin sekmede açık klasör yok",
+    "alreadyInProjects": "\"{name}\" zaten projelerinizde",
+    "removed": "\"{name}\" projelerden kaldırıldı",
+    "remove": "Kaldır"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "Kartı Düzenle"

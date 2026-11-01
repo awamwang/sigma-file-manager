@@ -718,6 +718,19 @@
     "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
     "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
+  "projectsPicker": {
+    "title": "Projekte",
+    "openProject": "Projekt öffnen...",
+    "addCurrentFolder": "Aktuellen Ordner zu Projekten hinzufügen",
+    "searchPlaceholder": "Projekte suchen...",
+    "noResults": "Keine Projekte entsprechen deiner Suche",
+    "emptyTitle": "Noch keine Projekte",
+    "emptyDescription": "Klicke mit der rechten Maustaste auf einen Ordner und wähle \"Zu Projekten hinzufügen\", oder führe \"Aktuellen Ordner zu Projekten hinzufügen\" in der Befehlspalette aus.",
+    "noActiveFolder": "Im aktiven Tab ist kein Ordner geöffnet",
+    "alreadyInProjects": "\"{name}\" ist bereits in deinen Projekten",
+    "removed": "\"{name}\" wurde aus den Projekten entfernt",
+    "remove": "Entfernen"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "Karte bearbeiten"

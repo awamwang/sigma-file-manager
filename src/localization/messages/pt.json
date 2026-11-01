@@ -718,6 +718,19 @@
     "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
     "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
+  "projectsPicker": {
+    "title": "Projetos",
+    "openProject": "Abrir projeto...",
+    "addCurrentFolder": "Adicionar pasta atual aos projetos",
+    "searchPlaceholder": "Pesquisar projetos...",
+    "noResults": "Nenhum projeto corresponde à sua pesquisa",
+    "emptyTitle": "Ainda não há projetos",
+    "emptyDescription": "Clique com o botão direito numa pasta e escolha \"Adicionar aos projetos\", ou execute \"Adicionar pasta atual aos projetos\" na paleta de comandos.",
+    "noActiveFolder": "Nenhuma pasta aberta no separador ativo",
+    "alreadyInProjects": "\"{name}\" já está nos seus projetos",
+    "removed": "\"{name}\" removido dos projetos",
+    "remove": "Remover"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "Editar cartão"

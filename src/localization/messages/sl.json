@@ -748,6 +748,19 @@
     "addedToProjects": "Dodano 0 predmetov v projekte | Dodano 1 predmet v projekte | Dodano {n} predmetov v projekte | Dodano {n} predmetov v projekte",
     "removedFromProjects": "Odstranjeno 0 predmetov iz projektov | Odstranjeno 1 predmet iz projektov | Odstranjeno {n} predmetov iz projektov | Odstranjeno {n} predmetov iz projektov"
   },
+  "projectsPicker": {
+    "title": "Projekti",
+    "openProject": "Odpri projekt...",
+    "addCurrentFolder": "Dodaj trenutno mapo med projekte",
+    "searchPlaceholder": "Iskanje projektov...",
+    "noResults": "Noben projekt ne ustreza vašemu iskanju",
+    "emptyTitle": "Še ni projektov",
+    "emptyDescription": "Desno kliknite mapo in izberite \"Dodaj med projekte\", ali v ukazni paleti zaženite \"Dodaj trenutno mapo med projekte\".",
+    "noActiveFolder": "V aktivnem zavihku ni odprte mape",
+    "alreadyInProjects": "\"{name}\" je že med vašimi projekti",
+    "removed": "\"{name}\" je bil odstranjen iz projektov",
+    "remove": "Odstrani"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "Uredi kartico"

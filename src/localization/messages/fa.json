@@ -714,6 +714,19 @@
     "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
     "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
+  "projectsPicker": {
+    "title": "پروژه‌ها",
+    "openProject": "باز کردن پروژه...",
+    "addCurrentFolder": "افزودن پوشه فعلی به پروژه‌ها",
+    "searchPlaceholder": "جستجوی پروژه‌ها...",
+    "noResults": "هیچ پروژه‌ای با جستجوی شما مطابقت ندارد",
+    "emptyTitle": "هنوز پروژه‌ای وجود ندارد",
+    "emptyDescription": "روی یک پوشه راست‌کلیک کرده و \"افزودن به پروژه‌ها\" را انتخاب کنید، یا از پالت فرمان \"افزودن پوشه فعلی به پروژه‌ها\" را اجرا کنید.",
+    "noActiveFolder": "هیچ پوشه‌ای در زبانه فعال باز نیست",
+    "alreadyInProjects": "\"{name}\" از قبل در پروژه‌های شماست",
+    "removed": "\"{name}\" از پروژه‌ها حذف شد",
+    "remove": "حذف"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "ویرایش کارت"

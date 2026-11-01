@@ -718,6 +718,19 @@
     "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
     "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
+  "projectsPicker": {
+    "title": "Progetti",
+    "openProject": "Apri progetto...",
+    "addCurrentFolder": "Aggiungi la cartella corrente ai progetti",
+    "searchPlaceholder": "Cerca progetti...",
+    "noResults": "Nessun progetto corrisponde alla tua ricerca",
+    "emptyTitle": "Ancora nessun progetto",
+    "emptyDescription": "Fai clic con il tasto destro su una cartella e scegli \"Aggiungi ai progetti\", oppure esegui \"Aggiungi la cartella corrente ai progetti\" dalla palette dei comandi.",
+    "noActiveFolder": "Nessuna cartella aperta nella scheda attiva",
+    "alreadyInProjects": "\"{name}\" è già nei tuoi progetti",
+    "removed": "\"{name}\" rimosso dai progetti",
+    "remove": "Rimuovi"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "Modifica scheda"

@@ -718,6 +718,19 @@
     "addedToProjects": "Đã thêm 0 mục vào dự án | Đã thêm 1 mục vào dự án | Đã thêm {n} mục vào dự án | Đã thêm {n} mục vào dự án",
     "removedFromProjects": "Đã xóa 0 mục khỏi dự án | Đã xóa 1 mục khỏi dự án | Đã xóa {n} mục khỏi dự án | Đã xóa {n} mục khỏi dự án"
   },
+  "projectsPicker": {
+    "title": "Dự án",
+    "openProject": "Mở dự án...",
+    "addCurrentFolder": "Thêm thư mục hiện tại vào dự án",
+    "searchPlaceholder": "Tìm kiếm dự án...",
+    "noResults": "Không có dự án nào khớp với tìm kiếm của bạn",
+    "emptyTitle": "Chưa có dự án nào",
+    "emptyDescription": "Nhấp chuột phải vào một thư mục và chọn \"Thêm vào dự án\", hoặc chạy \"Thêm thư mục hiện tại vào dự án\" từ bảng lệnh.",
+    "noActiveFolder": "Không có thư mục nào đang mở trong thẻ hoạt động",
+    "alreadyInProjects": "\"{name}\" đã có trong dự án của bạn",
+    "removed": "Đã xóa \"{name}\" khỏi dự án",
+    "remove": "Xóa"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "Chỉnh sửa thẻ"

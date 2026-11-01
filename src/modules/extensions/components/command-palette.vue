@@ -46,6 +46,8 @@ const builtinCommandTitleKeys: Record<string, string> = {
   'sigma.app.openSettings': 'openSettings',
   'sigma.app.openExtensions': 'openExtensions',
   'sigma.app.reloadWindow': 'trayMenu.reloadWindow',
+  'sigma.projects.open': 'projectsPicker.openProject',
+  'sigma.projects.addCurrentFolder': 'projectsPicker.addCurrentFolder',
 };
 
 const isOpen = ref(false);

@@ -15,6 +15,7 @@ import { useEmbedPages } from '@/modules/extensions/composables/use-embed-pages'
 import ExtensionDialog from '@/modules/extensions/components/extension-dialog.vue';
 import ExtensionEmbed from '@/modules/extensions/components/extension-embed.vue';
 import CommandPalette from '@/modules/extensions/components/command-palette.vue';
+import ProjectsQuickPicker from '@/modules/dashboard/components/projects-quick-picker.vue';
 import ExtensionModalsContainer from '@/modules/extensions/components/extension-modals-container.vue';
 
 const userSettingsStore = useUserSettingsStore();
@@ -31,6 +32,7 @@ const { activeEmbedPageId, visitedEmbedPages } = useEmbedPages();
     <ChangelogDialog />
     <ExtensionDialog />
     <CommandPalette />
+    <ProjectsQuickPicker />
     <ExtensionModalsContainer />
     <TooltipProvider :delay-duration="userSettingsStore.userSettings.tooltipDelayMs">
       <NavSidebar />

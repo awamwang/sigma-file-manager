@@ -748,6 +748,19 @@
     "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
     "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
+  "projectsPicker": {
+    "title": "Projects",
+    "openProject": "Open project...",
+    "addCurrentFolder": "Add current folder to projects",
+    "searchPlaceholder": "Search projects...",
+    "noResults": "No projects match your search",
+    "emptyTitle": "No projects yet",
+    "emptyDescription": "Right-click a folder and pick \"Add to Projects\", or run \"Add current folder to projects\" from the command palette.",
+    "noActiveFolder": "No folder is open in the active tab",
+    "alreadyInProjects": "\"{name}\" is already in your projects",
+    "removed": "Removed \"{name}\" from projects",
+    "remove": "Remove"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "Edit card"

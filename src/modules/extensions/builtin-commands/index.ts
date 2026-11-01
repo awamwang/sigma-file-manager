@@ -4,10 +4,14 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { ref, type Ref } from 'vue';
+import { markRaw, ref, type Ref } from 'vue';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import type { ExtensionPermission } from '@/types/extension';
 import { useQuickViewStore } from '@/stores/runtime/quick-view';
+import { useUserProjectsStore } from '@/stores/storage/user-projects';
+import { toast, ToastStatic } from '@/components/ui/toaster';
+import { i18n } from '@/localization';
+import { getCurrentPath } from '@/modules/extensions/context';
 import router from '@/router';
 import normalizePath from '@/utils/normalize-path';
 import type { DirEntry } from '@/types/dir-entry';
@@ -47,6 +51,7 @@ export type SaveFileDialogOptions = {
 
 type NavigateToPathFn = (path: string) => Promise<void>;
 type OpenNavigatorFileFn = (path: string) => Promise<void>;
+type OpenProjectsPickerFn = () => void;
 
 const NAVIGATOR_PATH_LOOKUP_TIMEOUT_MS = 750;
 const NAVIGATOR_HANDLER_WAIT_ATTEMPTS = 40;
@@ -54,6 +59,7 @@ const NAVIGATOR_HANDLER_WAIT_INTERVAL_MS = 50;
 
 const navigateToPathFn: Ref<NavigateToPathFn | null> = ref(null);
 const openNavigatorFileFn: Ref<OpenNavigatorFileFn | null> = ref(null);
+const openProjectsPickerFn: Ref<OpenProjectsPickerFn | null> = ref(null);
 
 export function registerNavigateToPath(fn: NavigateToPathFn): void {
   navigateToPathFn.value = fn;
@@ -69,6 +75,14 @@ export function registerOpenNavigatorFile(fn: OpenNavigatorFileFn): void {
 
 export function unregisterOpenNavigatorFile(): void {
   openNavigatorFileFn.value = null;
+}
+
+export function registerOpenProjectsPicker(fn: OpenProjectsPickerFn): void {
+  openProjectsPickerFn.value = fn;
+}
+
+export function unregisterOpenProjectsPicker(): void {
+  openProjectsPickerFn.value = null;
 }
 
 async function waitForNavigatorHandler<T>(
@@ -189,6 +203,18 @@ export const BUILTIN_COMMANDS: BuiltinCommandDefinition[] = [
     showInPalette: true,
   },
   {
+    id: 'sigma.projects.open',
+    title: 'Open Project',
+    description: 'Open a project from the projects quick picker',
+    showInPalette: true,
+  },
+  {
+    id: 'sigma.projects.addCurrentFolder',
+    title: 'Add Current Folder to Projects',
+    description: 'Add the folder open in the active tab to projects',
+    showInPalette: true,
+  },
+  {
     id: 'sigma.app.openExtensions',
     title: 'Open Extensions',
     description: 'Open the extensions page',
@@ -280,6 +306,61 @@ function initializeHandlers(): void {
 
   builtinCommandHandlers.set('sigma.app.openSettings', async () => {
     await router.push({ name: 'settings' });
+  });
+
+  builtinCommandHandlers.set('sigma.projects.open', async () => {
+    const openProjectsPicker = openProjectsPickerFn.value;
+
+    if (!openProjectsPicker) {
+      throw new Error('Projects quick picker is not available');
+    }
+
+    openProjectsPicker();
+  });
+
+  builtinCommandHandlers.set('sigma.projects.addCurrentFolder', async () => {
+    const currentPath = getCurrentPath();
+
+    if (!currentPath) {
+      toast.custom(markRaw(ToastStatic), {
+        componentProps: {
+          data: {
+            title: i18n.global.t('projectsPicker.noActiveFolder'),
+            description: '',
+          },
+        },
+      });
+      return;
+    }
+
+    const userProjectsStore = useUserProjectsStore();
+
+    if (userProjectsStore.isProject(currentPath)) {
+      const existingProject = userProjectsStore.getProjectByPath(currentPath);
+
+      toast.custom(markRaw(ToastStatic), {
+        componentProps: {
+          data: {
+            title: i18n.global.t('projectsPicker.alreadyInProjects', {
+              name: existingProject?.name ?? currentPath,
+            }),
+            description: '',
+          },
+        },
+      });
+      return;
+    }
+
+    await userProjectsStore.addProject(currentPath);
+
+    toast.custom(markRaw(ToastStatic), {
+      componentProps: {
+        data: {
+          title: i18n.global.t('notifications.addedToProjects', 1),
+          description: '',
+        },
+      },
+    });
   });
 
   builtinCommandHandlers.set('sigma.app.openExtensions', async () => {

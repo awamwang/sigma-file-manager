@@ -718,6 +718,19 @@
     "addedToProjects": "Added 0 items to projects | Added 1 item to projects | Added {n} items to projects | Added {n} items to projects",
     "removedFromProjects": "Removed 0 items from projects | Removed 1 item from projects | Removed {n} items from projects | Removed {n} items from projects"
   },
+  "projectsPicker": {
+    "title": "项目",
+    "openProject": "打开项目...",
+    "addCurrentFolder": "将当前文件夹添加到项目",
+    "searchPlaceholder": "搜索项目...",
+    "noResults": "没有符合搜索的项目",
+    "emptyTitle": "还没有项目",
+    "emptyDescription": "右键点击文件夹并选择\"添加到项目\"，或在命令面板中运行\"将当前文件夹添加到项目\"。",
+    "noActiveFolder": "活动标签页中没有打开的文件夹",
+    "alreadyInProjects": "\"{name}\" 已在您的项目中",
+    "removed": "已从项目中移除\"{name}\"",
+    "remove": "移除"
+  },
   "contextMenus": {
     "dirItem": {
       "editCard": "编辑卡片"
