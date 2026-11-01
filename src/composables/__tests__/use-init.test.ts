@@ -34,6 +34,7 @@ const {
   showWindowMock,
   terminalsInitMock,
   userPathsInitMock,
+  userProjectsInitMock,
   userSettingsInitMock,
   userStatsInitMock,
   userStatsRunDeferredMaintenanceMock,
@@ -69,6 +70,7 @@ const {
   showWindowMock: vi.fn(),
   terminalsInitMock: vi.fn(),
   userPathsInitMock: vi.fn(),
+  userProjectsInitMock: vi.fn(),
   userSettingsInitMock: vi.fn(),
   userStatsInitMock: vi.fn(),
   userStatsRunDeferredMaintenanceMock: vi.fn(),
@@ -153,6 +155,12 @@ vi.mock('@/stores/storage/user-settings', () => ({
     init: userSettingsInitMock,
     userSettings: userSettingsMock,
     set: userSettingsSetMock,
+  }),
+}));
+
+vi.mock('@/stores/storage/user-projects', () => ({
+  useUserProjectsStore: () => ({
+    init: userProjectsInitMock,
   }),
 }));
 
