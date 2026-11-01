@@ -171,7 +171,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const isInitialized = ref(false);
 
   const sections = computed(() => allSections.value.filter(
-    section => section.key !== 'defaultFileManager' || platformStore.isWindows,
+    section => (section.key !== 'defaultFileManager' && section.key !== 'explorerAddProject')
+      || platformStore.isWindows,
   ));
   const tabs = computed(() =>
     settingsTabs
@@ -221,6 +222,7 @@ export const useSettingsStore = defineStore('settings', () => {
       { default: TabAppearanceSection },
       { default: ExtensionsListSection },
       { default: DefaultFileManagerSection },
+      { default: ExplorerAddProjectSection },
     ] = await Promise.all([
       import('@/modules/settings/ui/categories/general/language.vue'),
       import('@/modules/settings/ui/categories/general/date-time.vue'),
@@ -254,6 +256,7 @@ export const useSettingsStore = defineStore('settings', () => {
       import('@/modules/settings/ui/categories/tabs/tab-appearance.vue'),
       import('@/modules/settings/ui/categories/extensions/extensions-list.vue'),
       import('@/modules/settings/ui/categories/experimental/default-file-manager.vue'),
+      import('@/modules/settings/ui/categories/experimental/explorer-add-project.vue'),
     ]);
 
     allSections.value = [
@@ -483,6 +486,13 @@ export const useSettingsStore = defineStore('settings', () => {
         titleKey: 'settings.experimental.defaultFileManager.title',
         tags: 'settingsTags.experimental',
         component: markRaw(DefaultFileManagerSection),
+        category: 'experimental',
+      },
+      {
+        key: 'explorerAddProject',
+        titleKey: 'settings.experimental.explorerAddProject.title',
+        tags: 'settingsTags.experimental',
+        component: markRaw(ExplorerAddProjectSection),
         category: 'experimental',
       },
     ];

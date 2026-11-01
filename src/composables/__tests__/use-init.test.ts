@@ -42,6 +42,7 @@ const {
   workspacesLoadCurrentTabGroupMock,
   userSettingsMock,
   userSettingsSetMock,
+  userProjectsAddProjectMock,
 } = vi.hoisted(() => ({
   appWindowInitMainWindowStateListenersMock: vi.fn(),
   applyLaunchAtStartupPreferenceMock: vi.fn(),
@@ -86,6 +87,7 @@ const {
     },
   },
   userSettingsSetMock: vi.fn(),
+  userProjectsAddProjectMock: vi.fn(),
 }));
 
 vi.mock('vue', async () => {
@@ -161,6 +163,7 @@ vi.mock('@/stores/storage/user-settings', () => ({
 vi.mock('@/stores/storage/user-projects', () => ({
   useUserProjectsStore: () => ({
     init: userProjectsInitMock,
+    addProject: userProjectsAddProjectMock,
   }),
 }));
 
@@ -300,6 +303,21 @@ vi.mock('@/modules/app-updater', () => ({
 
 vi.mock('@/composables/use-clipboard-focus-sync', () => ({
   useClipboardFocusSync: vi.fn(),
+}));
+
+vi.mock('@/localization', () => ({
+  i18n: {
+    global: {
+      t: (key: string) => key,
+    },
+  },
+}));
+
+vi.mock('@/components/ui/toaster', () => ({
+  toast: Object.assign(() => {}, {
+    success: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 vi.mock('@/utils/autostart-sync', () => ({
@@ -775,6 +793,31 @@ describe('useInit startup restoration', () => {
 
     expect(routerPushMock).toHaveBeenCalledWith({ name: 'settings' });
   });
+
+  it('adds a project from the launch action on cold start', async () => {
+    userProjectsAddProjectMock.mockReset().mockResolvedValue(null);
+
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === 'get_launch_context') {
+        return createLaunchContext({
+          action: {
+            type: 'addProject',
+            path: 'C:\\Projects\\app',
+          },
+        });
+      }
+
+      return null;
+    });
+
+    const { useInit } = await import('@/composables/use-init');
+    const { init, awaitBackgroundTasks } = useInit();
+
+    await completeInit(init, awaitBackgroundTasks);
+
+    expect(userProjectsAddProjectMock).toHaveBeenCalledWith('C:/Projects/app');
+    expect(showWindowMock).toHaveBeenCalledTimes(1);
+  });
 });
 
 function createLaunchContext(overrides: Partial<{
@@ -783,6 +826,10 @@ function createLaunchContext(overrides: Partial<{
   executableDir: string | null;
   hadAbsorbedShellPaths: boolean;
   hadDelegatedShellPaths: boolean;
+  action: {
+    type: 'addProject';
+    path: string;
+  } | null;
 }>) {
   return {
     args: ['sigma-file-manager.exe'],
@@ -790,6 +837,7 @@ function createLaunchContext(overrides: Partial<{
     executableDir: null,
     hadAbsorbedShellPaths: false,
     hadDelegatedShellPaths: false,
+    action: null,
     ...overrides,
   };
 }

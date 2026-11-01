@@ -10,12 +10,18 @@ import normalizePath, {
 } from '@/utils/normalize-path';
 import { LOCATIONS_VIRTUAL_PATH } from '@/utils/virtual-locations';
 
+export interface LaunchAction {
+  type: 'addProject';
+  path: string;
+}
+
 export interface LaunchContext {
   args: string[];
   cwd: string | null;
   executableDir: string | null;
   hadAbsorbedShellPaths: boolean;
   hadDelegatedShellPaths: boolean;
+  action: LaunchAction | null;
 }
 
 export interface LaunchTarget {

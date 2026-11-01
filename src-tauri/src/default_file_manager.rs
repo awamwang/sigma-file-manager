@@ -3,9 +3,9 @@
 // Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 
 #[cfg(windows)]
-mod launcher;
+pub(crate) mod launcher;
 #[cfg(windows)]
-mod registry;
+pub(crate) mod registry;
 
 #[cfg(windows)]
 use crate::windows_installation::{
@@ -41,12 +41,12 @@ const MICROSOFT_STORE_UNAVAILABLE_ERROR: &str =
     "Setting Sigma File Manager as the default file manager is not available in the Microsoft Store version.";
 
 #[cfg(windows)]
-fn default_file_manager_is_supported_for_installation(is_windows_store_installation: bool) -> bool {
+pub(crate) fn default_file_manager_is_supported_for_installation(is_windows_store_installation: bool) -> bool {
     !is_windows_store_installation
 }
 
 #[cfg(windows)]
-fn default_file_manager_is_supported() -> bool {
+pub(crate) fn default_file_manager_is_supported() -> bool {
     default_file_manager_is_supported_for_installation(
         windows_installation::is_windows_store_installation(),
     )
@@ -308,13 +308,35 @@ pub fn is_current_default_file_manager() -> Result<bool, String> {
     }
 }
 
+/// Deploys the shared shell-integration launcher without touching any
+/// registry keys. Used by the Explorer add-project context menu integration.
+#[cfg(windows)]
+pub fn ensure_launcher_deployment() -> Result<(), String> {
+    let application_launch_target = launcher::application_launch_target()?;
+    launcher::ensure_deployment(&application_launch_target)
+}
+
+/// Removes the shared launcher deployment only when no other shell
+/// integration still references it. The Explorer add-project context menu
+/// reuses the same launcher, so its registry state is checked first.
+#[cfg(windows)]
+pub fn remove_launcher_deployment_if_unused() -> Result<(), String> {
+    match crate::explorer_add_project::command_key_is_owned_by_sfm() {
+        Ok(true) => Ok(()),
+        Ok(false) => launcher::remove_deployment(),
+        Err(error) => Err(format!(
+            "Refusing to remove the launcher deployment while the Explorer add-project state is unknown: {error}"
+        )),
+    }
+}
+
 #[cfg(windows)]
 fn rollback_failed_enable(
     rollback_keys: &[RegistryKeySnapshot],
     operation_error: String,
 ) -> String {
     match restore_registry_roots(rollback_keys) {
-        Ok(()) => match launcher::remove_deployment() {
+        Ok(()) => match remove_launcher_deployment_if_unused() {
             Ok(()) => operation_error,
             Err(cleanup_error) => {
                 format!("{operation_error}; launcher cleanup failed: {cleanup_error}")
@@ -439,7 +461,7 @@ fn disable_default_file_manager(app_handle: &tauri::AppHandle) -> Result<bool, S
 
         restore_with_rollback(&snapshot.original_keys, &current_keys)?;
         remove_snapshot(app_handle)?;
-        if let Err(error) = launcher::remove_deployment() {
+        if let Err(error) = remove_launcher_deployment_if_unused() {
             eprintln!("Failed to remove default file manager launcher: {error}");
         }
         if registry_owner == Some(LauncherRegistryOwner::Legacy) {
@@ -468,7 +490,7 @@ fn disable_default_file_manager(app_handle: &tauri::AppHandle) -> Result<bool, S
 
     match registry_owner {
         LauncherRegistryOwner::Current => {
-            if let Err(error) = launcher::remove_deployment() {
+            if let Err(error) = remove_launcher_deployment_if_unused() {
                 eprintln!("Failed to remove default file manager launcher: {error}");
             }
         }

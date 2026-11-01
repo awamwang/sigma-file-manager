@@ -31,6 +31,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { i18n } from '@/localization';
+import { toast } from '@/components/ui/toaster';
 import { SIGMA_AUTOSTART_CLI_FLAG } from '@/constants/autostart';
 import { applyLaunchAtStartupPreference } from '@/utils/autostart-sync';
 import { isIsolatedDataDir } from '@/utils/app-dirs';
@@ -43,6 +45,7 @@ import {
   resolveLaunchTargetsFromArgs,
   type LaunchContext,
 } from '@/utils/launch-directories';
+import normalizePath from '@/utils/normalize-path';
 import { applyUiZoomStep } from '@/utils/ui-zoom';
 import { useClipboardFocusSync } from '@/composables/use-clipboard-focus-sync';
 import { toggleMainWindowFullscreen } from '@/utils/window-fullscreen';
@@ -243,12 +246,38 @@ export function useInit() {
     }
   }
 
+  async function applyLaunchAction(launchContext: LaunchContext): Promise<boolean> {
+    const action = launchContext.action;
+
+    if (!action) {
+      return false;
+    }
+
+    if (action.type === 'addProject') {
+      const projectPath = normalizePath(action.path);
+
+      await userProjectsStore.addProject(projectPath);
+      toast.success(String(i18n.global.t('notifications.addedToProjects', 1)));
+    }
+
+    return true;
+  }
+
   async function registerAppLaunchArgsListener() {
     if (appLaunchArgsUnlisten || !isMainWebviewWindow()) {
       return;
     }
 
     appLaunchArgsUnlisten = await listen<LaunchContext>(APP_LAUNCH_ARGS_EVENT, async (event) => {
+      const handledAction = await applyLaunchAction(event.payload);
+
+      if (handledAction) {
+        const currentWindow = getCurrentWindow();
+        await currentWindow.show();
+        await currentWindow.setFocus();
+        return;
+      }
+
       const didOpenTargets = await openDirectoriesFromLaunchArgs(event.payload);
 
       if (didOpenTargets) {
@@ -362,6 +391,15 @@ export function useInit() {
         () => applyStartupPage(initialLaunchContext, openedInitialLaunchTargets),
       );
       startLastRoutePersistence(router);
+
+      if (initialLaunchContext?.action) {
+        const launchContext = initialLaunchContext;
+
+        await traceInitStep(
+          'applyLaunchAction',
+          () => applyLaunchAction(launchContext),
+        );
+      }
 
       if (openedInitialLaunchTargets || !hasLaunchDirectoryCandidates(initialLaunchContext)) {
         await persistLastRoute(router.currentRoute.value);

@@ -488,6 +488,11 @@
         "title": "Sigma File Manager'i varsayılan dosya yöneticisi olarak ayarla",
         "description": "Bu seçenek sistem kaydını değiştirir ve cihazınızda beklenmedik yan etkilere neden olabilir. Riski kabul ederek devam edin.",
         "unavailableInMicrosoftStore": "Microsoft Store sürümünde kullanılamaz"
+      },
+      "explorerAddProject": {
+        "title": "\"Projelere ekle\" seçeneğini Dosya Gezgini bağlam menüsüne ekle",
+        "description": "Seçili klasörü Sigma File Manager projelerinize ekleyen bir bağlam menü öğesini Windows Dosya Gezgini'ne kaydeder.",
+        "unavailableInMicrosoftStore": "Microsoft Store sürümünde kullanılamaz"
       }
     }
   },

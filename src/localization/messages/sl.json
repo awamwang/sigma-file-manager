@@ -517,6 +517,11 @@
         "title": "Nastavi Sigma File Manager kot privzeti upravljalnik datotek",
         "description": "Ta možnost spremeni sistemski register in lahko povzroči nepričakovane stranske učinke na vaši napravi. Nadaljujte na lastno odgovornost.",
         "unavailableInMicrosoftStore": "Ni na voljo v različici iz trgovine Microsoft Store"
+      },
+      "explorerAddProject": {
+        "title": "Dodaj »Dodaj med projekte« v kontekstni meni Raziskovalca",
+        "description": "V kontekstni meni Raziskovalca Windows registrira element, ki izbrane mape doda med vaše projekte v Sigma File Manager.",
+        "unavailableInMicrosoftStore": "Ni na voljo v različici iz trgovine Microsoft Store"
       }
     }
   },

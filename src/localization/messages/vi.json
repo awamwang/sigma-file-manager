@@ -488,6 +488,11 @@
         "title": "Đặt Sigma File Manager làm trình quản lý tệp mặc định",
         "description": "Tùy chọn này sửa đổi sổ đăng ký hệ thống và có thể gây ra tác dụng phụ ngoài ý muốn trên thiết bị của bạn. Hãy tiếp tục với rủi ro của riêng bạn.",
         "unavailableInMicrosoftStore": "Không khả dụng trong phiên bản Microsoft Store"
+      },
+      "explorerAddProject": {
+        "title": "Thêm \"Thêm vào dự án\" vào menu ngữ cảnh của File Explorer",
+        "description": "Đăng ký một mục menu ngữ cảnh trong File Explorer của Windows để thêm thư mục được chọn vào các dự án Sigma File Manager của bạn.",
+        "unavailableInMicrosoftStore": "Không khả dụng trong phiên bản Microsoft Store"
       }
     }
   },

@@ -265,7 +265,13 @@ pub fn snapshot_registry_roots() -> Result<Vec<RegistryKeySnapshot>, String> {
         .collect()
 }
 
-fn delete_registry_key_tree(path: &str) -> Result<(), String> {
+pub fn registry_key_exists(path: &str) -> bool {
+    RegKey::predef(HKEY_CURRENT_USER)
+        .open_subkey(path)
+        .is_ok()
+}
+
+pub fn delete_registry_key_tree(path: &str) -> Result<(), String> {
     let current_user = RegKey::predef(HKEY_CURRENT_USER);
 
     match current_user.delete_subkey_all(path) {
@@ -273,6 +279,19 @@ fn delete_registry_key_tree(path: &str) -> Result<(), String> {
         Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
         Err(error) => Err(format!("Failed to delete registry key \"{path}\": {error}")),
     }
+}
+
+pub fn write_string_value(key_path: &str, name: &str, value: &str) -> Result<(), String> {
+    let current_user = RegKey::predef(HKEY_CURRENT_USER);
+    let (key, _) = current_user
+        .create_subkey(key_path)
+        .map_err(|error| format!("Failed to create registry key \"{key_path}\": {error}"))?;
+
+    key.set_value(name, &value).map_err(|error| {
+        format!(
+            "Failed to write registry value \"{name}\" for registry key \"{key_path}\": {error}"
+        )
+    })
 }
 
 fn restore_existing_key(snapshot: &RegistryKeySnapshot) -> Result<(), String> {

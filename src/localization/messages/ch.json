@@ -488,6 +488,11 @@
         "title": "将 Sigma File Manager 设为默认文件管理器",
         "description": "此选项会修改系统注册表，并且可能会对您的设备产生意外的副作用。请自行承担风险后继续。",
         "unavailableInMicrosoftStore": "Microsoft Store 版本不可用"
+      },
+      "explorerAddProject": {
+        "title": "在文件资源管理器右键菜单中添加“加入项目”",
+        "description": "在 Windows 文件资源管理器中注册一个右键菜单项，将所选文件夹加入 Sigma File Manager 的项目。",
+        "unavailableInMicrosoftStore": "Microsoft Store 版本不可用"
       }
     }
   },

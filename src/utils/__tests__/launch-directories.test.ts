@@ -39,6 +39,7 @@ describe('launch-directories', () => {
       executableDir: 'C:/Apps',
       hadAbsorbedShellPaths: false,
       hadDelegatedShellPaths: false,
+      action: null,
       ...overrides,
     };
   }

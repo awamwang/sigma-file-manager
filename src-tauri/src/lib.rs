@@ -14,6 +14,7 @@ mod delete_job;
 mod dir_reader;
 mod dir_size;
 mod dir_watcher;
+mod explorer_add_project;
 mod extensions;
 mod file_operations;
 mod global_search;
@@ -67,12 +68,21 @@ fn handle_auxiliary_window_close_requested(window: &tauri::Window, api: &tauri::
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+struct LaunchAction {
+    #[serde(rename = "type")]
+    action_type: String,
+    path: String,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct LaunchContext {
     args: Vec<String>,
     cwd: Option<String>,
     executable_dir: Option<String>,
     had_absorbed_shell_paths: bool,
     had_delegated_shell_paths: bool,
+    action: Option<LaunchAction>,
 }
 
 #[cfg(windows)]
@@ -153,8 +163,32 @@ fn launched_from_autostart(args: &[String]) -> bool {
     args.iter().any(|arg| arg == SIGMA_AUTOSTART_CLI_FLAG)
 }
 
+const SFM_ADD_PROJECT_CLI_FLAG: &str = "--sfm-add-project";
+
+/// Extracts the `--sfm-add-project <path>` action from the launch arguments.
+/// Both matched arguments are removed so the path is not also treated as a
+/// directory launch target.
+fn extract_add_project_action(args: &mut Vec<String>) -> Option<LaunchAction> {
+    let flag_index = args
+        .iter()
+        .position(|arg| arg.eq_ignore_ascii_case(SFM_ADD_PROJECT_CLI_FLAG))?;
+
+    let action_path = args
+        .get(flag_index + 1)
+        .cloned()
+        .filter(|path| !path.is_empty() && !path.starts_with('-'));
+
+    let removed_count = if action_path.is_some() { 2 } else { 1 };
+    args.drain(flag_index..flag_index + removed_count);
+
+    action_path.map(|path| LaunchAction {
+        action_type: "addProject".to_string(),
+        path,
+    })
+}
+
 fn build_launch_context(
-    args: Vec<String>,
+    mut args: Vec<String>,
     cwd: Option<String>,
     had_absorbed_shell_paths: bool,
     had_delegated_shell_paths: bool,
@@ -170,12 +204,15 @@ fn build_launch_context(
             .map(|path| path.to_string_lossy().into_owned())
     });
 
+    let action = extract_add_project_action(&mut args);
+
     LaunchContext {
         args,
         cwd: resolved_cwd,
         executable_dir,
         had_absorbed_shell_paths,
         had_delegated_shell_paths,
+        action,
     }
 }
 
@@ -302,6 +339,9 @@ pub fn run() {
             default_file_manager::default_file_manager_available,
             default_file_manager::is_default_file_manager,
             default_file_manager::set_default_file_manager,
+            explorer_add_project::explorer_add_project_available,
+            explorer_add_project::is_explorer_add_project_enabled,
+            explorer_add_project::set_explorer_add_project_enabled,
             app_updater::check_for_updates,
             app_updater::download_release_installer,
             app_updater::app_updates_managed_externally,
@@ -533,7 +573,70 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
 #[cfg(all(test, windows))]
 mod tests {
-    use super::filter_shell_namespace_args;
+    use super::{extract_add_project_action, filter_shell_namespace_args};
+
+    #[test]
+    fn add_project_action_is_extracted_from_launch_args() {
+        let mut args = vec![
+            "sigma-file-manager.exe".to_string(),
+            "--sfm-add-project".to_string(),
+            "C:\\Users\\aleks\\Projects\\app".to_string(),
+        ];
+
+        let action = extract_add_project_action(&mut args);
+
+        assert_eq!(args, vec!["sigma-file-manager.exe".to_string()]);
+        let action = action.expect("launch action");
+        assert_eq!(action.action_type, "addProject");
+        assert_eq!(action.path, "C:\\Users\\aleks\\Projects\\app");
+    }
+
+    #[test]
+    fn add_project_flag_without_path_is_removed_without_action() {
+        let mut args = vec![
+            "sigma-file-manager.exe".to_string(),
+            "--sfm-add-project".to_string(),
+        ];
+
+        let action = extract_add_project_action(&mut args);
+
+        assert_eq!(args, vec!["sigma-file-manager.exe".to_string()]);
+        assert!(action.is_none());
+    }
+
+    #[test]
+    fn add_project_flag_without_value_keeps_following_flag_as_argument() {
+        let mut args = vec![
+            "sigma-file-manager.exe".to_string(),
+            "--sfm-add-project".to_string(),
+            "--sigma-autostart".to_string(),
+        ];
+
+        let action = extract_add_project_action(&mut args);
+
+        assert_eq!(
+            args,
+            vec![
+                "sigma-file-manager.exe".to_string(),
+                "--sigma-autostart".to_string(),
+            ]
+        );
+        assert!(action.is_none());
+    }
+
+    #[test]
+    fn add_project_flag_is_matched_case_insensitively() {
+        let mut args = vec![
+            "sigma-file-manager.exe".to_string(),
+            "--SFM-Add-Project".to_string(),
+            "C:\\work".to_string(),
+        ];
+
+        let action = extract_add_project_action(&mut args);
+
+        assert_eq!(args, vec!["sigma-file-manager.exe".to_string()]);
+        assert_eq!(action.expect("launch action").path, "C:\\work");
+    }
 
     #[test]
     fn delegated_shell_namespace_paths_are_removed_from_launch_args() {

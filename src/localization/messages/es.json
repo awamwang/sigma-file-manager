@@ -488,6 +488,11 @@
         "title": "Establecer Sigma File Manager como gestor de archivos predeterminado",
         "description": "Esta opción modifica el registro del sistema y puede tener efectos secundarios inesperados en su dispositivo. Continúe bajo su propia responsabilidad.",
         "unavailableInMicrosoftStore": "No disponible en la versión de Microsoft Store"
+      },
+      "explorerAddProject": {
+        "title": "Añadir «Añadir a proyectos» al menú contextual del Explorador de archivos",
+        "description": "Registra una opción en el menú contextual del Explorador de archivos de Windows que añade la carpeta seleccionada a tus proyectos de Sigma File Manager.",
+        "unavailableInMicrosoftStore": "No disponible en la versión de Microsoft Store"
       }
     }
   },

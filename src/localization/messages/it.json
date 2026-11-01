@@ -488,6 +488,11 @@
         "title": "Imposta Sigma File Manager come file manager predefinito",
         "description": "Questa opzione modifica il registro di sistema e può avere effetti collaterali imprevisti sul dispositivo. Continua a tuo rischio.",
         "unavailableInMicrosoftStore": "Non disponibile nella versione Microsoft Store"
+      },
+      "explorerAddProject": {
+        "title": "Aggiungi \"Aggiungi ai progetti\" al menu contestuale di Esplora file",
+        "description": "Registra una voce nel menu contestuale di Esplora file di Windows che aggiunge la cartella selezionata ai progetti di Sigma File Manager.",
+        "unavailableInMicrosoftStore": "Non disponibile nella versione Microsoft Store"
       }
     }
   },

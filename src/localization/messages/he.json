@@ -517,6 +517,11 @@
         "title": "הגדר את Sigma File Manager כמנהל הקבצים שמוגדר כברירת מחדל",
         "description": "אפשרות זו משנה את רישום המערכת ועלולה לגרום לתופעות לוואי בלתי צפויות במכשירך. המשך על אחריותך.",
         "unavailableInMicrosoftStore": "לא זמין בגרסת Microsoft Store"
+      },
+      "explorerAddProject": {
+        "title": "הוספת \"הוסף לפרויקטים\" לתפריט ההקשר של סייר הקבצים",
+        "description": "רושם פריט בתפריט ההקשר של סייר הקבצים של Windows שמוסיף את התיקייה שנבחרה לפרויקטים שלך ב-Sigma File Manager.",
+        "unavailableInMicrosoftStore": "לא זמין בגרסת Microsoft Store"
       }
     }
   },

@@ -488,6 +488,11 @@
         "title": "Définir Sigma File Manager comme gestionnaire de fichiers par défaut",
         "description": "Cette option modifie le registre système et peut avoir des effets secondaires inattendus sur votre appareil. Continuez à vos propres risques.",
         "unavailableInMicrosoftStore": "Indisponible dans la version Microsoft Store"
+      },
+      "explorerAddProject": {
+        "title": "Ajouter « Ajouter aux projets » au menu contextuel de l'Explorateur de fichiers",
+        "description": "Enregistre une entrée de menu contextuel dans l'Explorateur de fichiers Windows qui ajoute le dossier sélectionné à vos projets Sigma File Manager.",
+        "unavailableInMicrosoftStore": "Indisponible dans la version Microsoft Store"
       }
     }
   },

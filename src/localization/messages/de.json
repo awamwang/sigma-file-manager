@@ -488,6 +488,11 @@
         "title": "Sigma File Manager als Standard-Dateimanager festlegen",
         "description": "Diese Option ändert die Systemregistrierung und kann unerwartete Nebenwirkungen auf Ihrem Gerät haben. Fahren Sie auf eigenes Risiko fort.",
         "unavailableInMicrosoftStore": "In der Microsoft Store-Version nicht verfügbar"
+      },
+      "explorerAddProject": {
+        "title": "„Zu Projekten hinzufügen“ zum Kontextmenü des Datei-Explorers hinzufügen",
+        "description": "Registriert einen Kontextmenüeintrag im Windows Datei-Explorer, der den ausgewählten Ordner zu Ihren Sigma File Manager-Projekten hinzufügt.",
+        "unavailableInMicrosoftStore": "In der Microsoft Store-Version nicht verfügbar"
       }
     }
   },
