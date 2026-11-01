@@ -4,6 +4,7 @@
 
 mod associated_programs;
 mod explorer_command;
+mod icon_cache;
 mod icon_utils;
 mod open_path;
 mod shell_menu;

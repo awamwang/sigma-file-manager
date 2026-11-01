@@ -141,13 +141,21 @@ fn rgba_to_base64_png(rgba_pixels: &[u8], width: u32, height: u32) -> Option<Str
 
 // Converts an IExplorerCommand::GetIcon location string into a displayable data
 // URI. The location can be a direct image/icon file path, or a
-// "module,resourceIndex" reference into a DLL/EXE.
+// "module,resourceIndex" reference into a DLL/EXE. Because the location is a
+// stable source identifier, the encoded result is persisted in the shell-icon
+// cache and reused by later shell-extension queries.
 pub fn icon_location_to_data_uri(location: &str) -> Option<String> {
     let location = location.trim();
     if location.is_empty() {
         return None;
     }
 
+    super::icon_cache::cached_icon_data_uri(location, || {
+        resolve_icon_location_to_data_uri(location)
+    })
+}
+
+fn resolve_icon_location_to_data_uri(location: &str) -> Option<String> {
     let (module_path, resource_index) = split_icon_location(location);
 
     if resource_index.is_none() {

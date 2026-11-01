@@ -121,6 +121,16 @@ pub fn local_data_dir_without_app(identifier: &str) -> Option<PathBuf> {
     }
 }
 
+/// Cache folder for code that runs before an `AppHandle` exists, e.g. the
+/// shell-extension helper processes. Mirrors the Tauri resolver's
+/// `app_cache_dir()` layout.
+pub fn cache_dir_without_app(identifier: &str) -> Option<PathBuf> {
+    match isolated_root() {
+        Some(root) => Some(isolated_dir(&root, AppDir::Cache)),
+        None => dirs::cache_dir().map(|dir| dir.join(identifier)),
+    }
+}
+
 /// Absolute window-state file path when isolated; the plugin joins it onto
 /// its config folder, and joining an absolute path replaces the base.
 pub fn window_state_file_override() -> Option<String> {

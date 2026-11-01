@@ -4,7 +4,7 @@ Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 -->
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
 import type { DirEntry } from '@/types/dir-entry';
@@ -19,18 +19,11 @@ import {
   MoreHorizontalIcon,
   Loader2Icon,
 } from '@lucide/vue';
-
-type MenuItemSource = 'legacy' | 'modern';
-
-interface ShellContextMenuItem {
-  id: number;
-  name: string;
-  verb: string | null;
-  icon: string | null;
-  children: ShellContextMenuItem[] | null;
-  source?: MenuItemSource;
-  isSeparator?: false;
-}
+import type {
+  MenuItemSource,
+  ShellContextMenuItem,
+} from './composables/shell-context-menu-cache';
+import { loadShellContextMenu as loadShellContextMenuQuery } from './composables/shell-context-menu-cache';
 
 interface MenuSeparatorItem {
   id: 0;
@@ -42,12 +35,6 @@ interface MenuSeparatorItem {
 }
 
 type MenuListItem = ShellContextMenuItem | MenuSeparatorItem;
-
-interface GetShellContextMenuResult {
-  success: boolean;
-  items: ShellContextMenuItem[];
-  error: string | null;
-}
 
 interface OpenWithResult {
   success: boolean;
@@ -64,10 +51,16 @@ const triggerLabel = computed(() =>
   t('moreOptions.shellExtensions'),
 );
 
+// The component is mounted only while its parent menu content is open, so a
+// short delayed load here acts as a prefetch: it starts the shell-extension
+// query as soon as the menu opens, well before the submenu is hovered, while
+// still skipping the helper processes for quick menu interactions.
+const PREFETCH_DELAY_MS = 200;
+
 const isLoading = ref(false);
 const menuItems = ref<MenuListItem[]>([]);
 const loadError = ref<string | null>(null);
-const hasLoadedForPath = ref<string | null>(null);
+let prefetchTimerId: number | null = null;
 
 function normalizeMenuItemName(name: string) {
   return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
@@ -125,35 +118,14 @@ async function loadShellContextMenu() {
   const entries = props.selectedEntries;
   if (entries.length === 0 || isLoading.value) return;
 
-  const cacheKey = entries.map(entry => entry.path).join('|');
-  if (cacheKey === hasLoadedForPath.value && menuItems.value.length > 0) return;
-
   isLoading.value = true;
   loadError.value = null;
 
-  if (hasLoadedForPath.value !== cacheKey) {
-    menuItems.value = [];
-  }
-
-  hasLoadedForPath.value = cacheKey;
-
   try {
-    const [legacyResult, modernResult] = await Promise.all([
-      invoke<GetShellContextMenuResult>('get_shell_context_menu', {
-        filePath: entries[0].path,
-      }).catch(invokeError => ({
-        success: false,
-        items: [],
-        error: String(invokeError),
-      })),
-      invoke<GetShellContextMenuResult>('get_modern_context_menu', {
-        filePaths: entries.map(entry => entry.path),
-      }).catch(invokeError => ({
-        success: false,
-        items: [],
-        error: String(invokeError),
-      })),
-    ]);
+    const queryResult = await loadShellContextMenuQuery(entries);
+    if (!queryResult) return;
+
+    const { legacyResult, modernResult } = queryResult;
 
     if (legacyResult.success || modernResult.success) {
       const legacyItems = legacyResult.success
@@ -190,6 +162,28 @@ function handleSubmenuOpenChange(isOpen: boolean) {
     loadShellContextMenu();
   }
 }
+
+function schedulePrefetch() {
+  if (prefetchTimerId !== null) {
+    window.clearTimeout(prefetchTimerId);
+  }
+
+  prefetchTimerId = window.setTimeout(() => {
+    prefetchTimerId = null;
+    loadShellContextMenu();
+  }, PREFETCH_DELAY_MS);
+}
+
+function cancelPrefetch() {
+  if (prefetchTimerId !== null) {
+    window.clearTimeout(prefetchTimerId);
+    prefetchTimerId = null;
+  }
+}
+
+onMounted(schedulePrefetch);
+
+onBeforeUnmount(cancelPrefetch);
 
 async function invokeMenuItem(item: MenuListItem) {
   if (item.isSeparator) return;
