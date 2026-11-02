@@ -153,7 +153,7 @@ function handleOpenChange(open: boolean) {
       </DialogHeader>
 
       <div
-        v-if="churn"
+        v-if="churn && (churn.relativeToSaved.addedCount > 0 || churn.relativeToSaved.closedCount > 0)"
         class="work-group-switch-save-dialog__churn"
       >
         <p>
@@ -167,20 +167,6 @@ function handleOpenChange(open: boolean) {
           >
             {{ t('workGroups.switchChurnClosedEmphasis', {
               closed: churn.relativeToSaved.closedCount,
-            }) }}
-          </span>
-        </p>
-        <p>
-          {{ t('workGroups.switchChurnRelativeToTarget', {
-            opened: churn.relativeToTarget.addedCount,
-            closed: churn.relativeToTarget.closedCount,
-          }) }}
-          <span
-            v-if="churn.relativeToTarget.closedCount > 0"
-            class="work-group-switch-save-dialog__closed"
-          >
-            {{ t('workGroups.switchChurnClosedEmphasis', {
-              closed: churn.relativeToTarget.closedCount,
             }) }}
           </span>
         </p>

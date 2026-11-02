@@ -50,13 +50,6 @@ function cloneOpenState(openState: WorkGroupOpenState | null): WorkGroupOpenStat
   return openState ? clone(openState) : null;
 }
 
-function areOpenStatesEqual(
-  left: WorkGroupOpenState | null | undefined,
-  right: WorkGroupOpenState | null | undefined,
-): boolean {
-  return JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
-}
-
 export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
   const userPathsStore = useUserPathsStore();
   const userWorkGroupsStorage = ref<LazyStore | null>(null);
@@ -395,8 +388,15 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       return false;
     }
 
+    // Gate Switch Save Prompt on Active tab-path churn vs saved Open State only.
+    // Pane widths / filters / target-replace cost must not force the prompt.
     const workspacesStore = useWorkspacesStore();
-    return !areOpenStatesEqual(workspacesStore.captureOpenStateSnapshot(), active.openState);
+    const churn = diffOpenStatePaths(
+      active.openState,
+      workspacesStore.captureOpenStateSnapshot(),
+    );
+
+    return churn.addedCount > 0 || churn.closedCount > 0;
   }
 
   async function writeOpenStateToWorkGroup(workGroupId: string, openState: WorkGroupOpenState) {
