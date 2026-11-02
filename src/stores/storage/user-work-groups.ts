@@ -25,7 +25,12 @@ import {
   type StartupStorageFileBootstrap,
 } from './utils/startup-storage-bootstrap';
 import { normalizePathForComparison } from '@/utils/file-operation-paths';
-import { isExactMemberPath } from '@/utils/work-group-paths';
+import {
+  diffMemberPaths,
+  isExactMemberPath,
+  type MemberPathDiff,
+  uniqueMemberPaths,
+} from '@/utils/work-group-paths';
 import { diffOpenStatePaths } from '@/utils/work-group-open-state-diff';
 import uniqueId from '@/utils/unique-id';
 import clone from '@/utils/clone';
@@ -572,6 +577,51 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     await addMemberPath(workGroupId, path);
   }
 
+  function listCurrentTabPaths(): string[] {
+    const workspacesStore = useWorkspacesStore();
+    const workspace = workspacesStore.currentWorkspace;
+
+    if (!workspace) {
+      return [];
+    }
+
+    return uniqueMemberPaths(
+      workspace.tabGroups.flatMap(tabGroup => tabGroup.map(tab => tab.path)),
+    );
+  }
+
+  function getReplaceMembersFromTabsDiff(workGroupId: string): MemberPathDiff | null {
+    const workGroup = getWorkGroupById(workGroupId);
+
+    if (!workGroup) {
+      return null;
+    }
+
+    return diffMemberPaths(workGroup.memberPaths, listCurrentTabPaths());
+  }
+
+  async function replaceMemberPathsFromCurrentTabs(workGroupId: string): Promise<boolean> {
+    const workGroup = getWorkGroupById(workGroupId);
+    const diff = getReplaceMembersFromTabsDiff(workGroupId);
+
+    if (!workGroup || !diff || !diff.hasChanges) {
+      return false;
+    }
+
+    replaceWorkGroup(workGroupId, {
+      ...workGroup,
+      memberPaths: diff.nextMemberPaths,
+    });
+    await saveWorkGroups();
+
+    // Session → definition write: do not raise Session Align to push the same paths back.
+    if (workGroupId === userWorkGroups.value.activeWorkGroupId) {
+      clearSessionAlignPending();
+    }
+
+    return true;
+  }
+
   async function setMemberPathsForPath(path: string, workGroupIds: string[]) {
     const selectedIds = new Set(workGroupIds);
     const addedToWorkGroupIds: string[] = [];
@@ -819,6 +869,9 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     removeMemberPath,
     toggleMemberPath,
     setMemberPathsForPath,
+    listCurrentTabPaths,
+    getReplaceMembersFromTabsDiff,
+    replaceMemberPathsFromCurrentTabs,
     activateWorkGroup,
     openAllMembers,
     closeMemberTabs,

@@ -4,7 +4,7 @@ Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ChevronDownIcon, LayersIcon } from '@lucide/vue';
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
 import { useWorkGroupActivation } from '@/modules/work-groups/composables/use-work-group-activation';
 import WorkGroupSwitchSaveDialog from '@/modules/work-groups/components/work-group-switch-save-dialog.vue';
+import WorkGroupSaveMembersDialog from '@/modules/work-groups/components/work-group-save-members-dialog.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -36,6 +37,13 @@ const {
 } = useWorkGroupActivation();
 
 const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t('workGroups.title'));
+const saveMembersDialogOpen = ref(false);
+const saveMembersWorkGroupId = ref<string | null>(null);
+
+function requestSaveMembers(workGroupId: string) {
+  saveMembersWorkGroupId.value = workGroupId;
+  saveMembersDialogOpen.value = true;
+}
 </script>
 
 <template>
@@ -86,6 +94,9 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
             <DropdownMenuItem @select="activateWorkGroup(workGroup.id)">
               {{ t('workGroups.open') }}
             </DropdownMenuItem>
+            <DropdownMenuItem @select="requestSaveMembers(workGroup.id)">
+              {{ t('workGroups.saveAsMembersConfig', { name: workGroup.name }) }}
+            </DropdownMenuItem>
             <DropdownMenuItem @select="userWorkGroupsStore.openAllMembers(workGroup.id)">
               {{ t('workGroups.openAllMembers') }}
             </DropdownMenuItem>
@@ -106,6 +117,11 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
       :target-work-group-id="pendingTargetWorkGroupId"
       @confirmed="confirmSwitch"
       @cancelled="cancelSwitch"
+    />
+
+    <WorkGroupSaveMembersDialog
+      v-model:open="saveMembersDialogOpen"
+      :work-group-id="saveMembersWorkGroupId"
     />
   </div>
 </template>
@@ -136,7 +152,7 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
 }
 
 .work-group-tab-bar-switcher__sub-menu {
-  min-width: 180px;
+  min-width: 220px;
 }
 
 .work-group-tab-bar-switcher__sub-trigger {
