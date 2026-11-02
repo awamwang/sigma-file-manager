@@ -4,14 +4,16 @@ Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import {
   FolderPlusIcon,
   LayersIcon,
   PencilIcon,
   Trash2Icon,
+  TriangleAlertIcon,
 } from '@lucide/vue';
 import { PageDefaultLayout } from '@/layouts';
 import { Button } from '@/components/ui/button';
@@ -47,6 +49,8 @@ const selectedWorkGroupId = ref<string | null>(null);
 const renameDraft = ref('');
 const deleteDialogOpen = ref(false);
 const pendingDeleteId = ref<string | null>(null);
+const missingMemberPaths = ref<Set<string>>(new Set());
+let missingMembersRequestId = 0;
 
 const workGroups = computed(() => userWorkGroupsStore.workGroups);
 const selectedWorkGroup = computed(() => (
@@ -54,11 +58,49 @@ const selectedWorkGroup = computed(() => (
   ?? workGroups.value[0]
   ?? null
 ));
+const missingMemberCount = computed(() => missingMemberPaths.value.size);
 
 function selectWorkGroup(workGroup: WorkGroup) {
   selectedWorkGroupId.value = workGroup.id;
   renameDraft.value = workGroup.name;
 }
+
+function isMissingMember(path: string): boolean {
+  return missingMemberPaths.value.has(path);
+}
+
+async function refreshMissingMembers(memberPaths: string[]) {
+  const requestId = ++missingMembersRequestId;
+
+  if (memberPaths.length === 0) {
+    missingMemberPaths.value = new Set();
+    return;
+  }
+
+  const results = await Promise.all(memberPaths.map(async (path) => {
+    try {
+      const exists = await invoke<boolean>('path_exists', { path });
+      return exists ? null : path;
+    }
+    catch {
+      return path;
+    }
+  }));
+
+  if (requestId !== missingMembersRequestId) {
+    return;
+  }
+
+  missingMemberPaths.value = new Set(results.filter((path): path is string => Boolean(path)));
+}
+
+watch(
+  () => selectedWorkGroup.value?.memberPaths ?? [],
+  (memberPaths) => {
+    void refreshMissingMembers(memberPaths);
+  },
+  { immediate: true, deep: true },
+);
 
 async function createEmptyWorkGroup() {
   const workGroup = await userWorkGroupsStore.createWorkGroup();
@@ -249,6 +291,14 @@ if (workGroups.value[0]) {
           </div>
 
           <p
+            v-if="missingMemberCount > 0"
+            class="work-groups-page__missing-banner"
+          >
+            <TriangleAlertIcon :size="14" />
+            {{ t('workGroups.missingMembersBanner', { count: missingMemberCount }) }}
+          </p>
+
+          <p
             v-if="selectedWorkGroup.memberPaths.length === 0"
             class="work-groups-page__empty"
           >
@@ -262,8 +312,17 @@ if (workGroups.value[0]) {
               v-for="memberPath in selectedWorkGroup.memberPaths"
               :key="memberPath"
               class="work-groups-page__member"
+              :class="{ 'work-groups-page__member--missing': isMissingMember(memberPath) }"
             >
-              <span>{{ memberPath }}</span>
+              <div class="work-groups-page__member-main">
+                <span>{{ memberPath }}</span>
+                <span
+                  v-if="isMissingMember(memberPath)"
+                  class="work-groups-page__member-error"
+                >
+                  {{ t('workGroups.missingMemberBadge') }}
+                </span>
+              </div>
               <Button
                 size="xs"
                 variant="ghost"
@@ -452,6 +511,19 @@ if (workGroups.value[0]) {
   font-size: 13px;
 }
 
+.work-groups-page__missing-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid hsl(var(--destructive) / 0.35);
+  border-radius: 8px;
+  background: hsl(var(--destructive) / 0.08);
+  color: hsl(var(--destructive));
+  font-size: 13px;
+}
+
 .work-groups-page__members {
   display: flex;
   flex-direction: column;
@@ -471,6 +543,23 @@ if (workGroups.value[0]) {
   background: hsl(var(--background) / 0.5);
   font-size: 13px;
   word-break: break-all;
+}
+
+.work-groups-page__member--missing {
+  border: 1px solid hsl(var(--destructive) / 0.35);
+}
+
+.work-groups-page__member-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.work-groups-page__member-error {
+  color: hsl(var(--destructive));
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .work-groups-page__defaults-actions {

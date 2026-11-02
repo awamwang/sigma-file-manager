@@ -34,9 +34,15 @@ const userWorkGroupsStore = useUserWorkGroupsStore();
 
 const mode = ref<'current' | 'create'>('current');
 const newName = ref('');
+const openUnopenedNewMembers = ref(true);
 const closeReason = ref<'confirm' | 'cancel' | null>(null);
 
 const activeWorkGroup = computed(() => userWorkGroupsStore.activeWorkGroup);
+const churn = computed(() => (
+  isOpen.value
+    ? userWorkGroupsStore.getSwitchOpenStateChurn(props.targetWorkGroupId)
+    : null
+));
 const canConfirm = computed(() => {
   if (mode.value === 'create') {
     return newName.value.trim().length > 0;
@@ -44,6 +50,10 @@ const canConfirm = computed(() => {
 
   return Boolean(activeWorkGroup.value);
 });
+const showOpenUnopenedOption = computed(() => (
+  (mode.value === 'current' || mode.value === 'create')
+  && (churn.value?.unopenedNewMemberPaths.length ?? 0) > 0
+));
 
 watch(isOpen, (open) => {
   if (!open) {
@@ -52,8 +62,31 @@ watch(isOpen, (open) => {
 
   mode.value = 'current';
   newName.value = '';
+  openUnopenedNewMembers.value = true;
   closeReason.value = null;
 });
+
+function buildSaveMode(): ActivateWorkGroupSaveMode | null {
+  const includeOpenUnopened = showOpenUnopenedOption.value && openUnopenedNewMembers.value;
+
+  if (mode.value === 'create') {
+    const name = newName.value.trim();
+    if (!name) {
+      return null;
+    }
+
+    return {
+      type: 'create',
+      name,
+      openUnopenedNewMembers: includeOpenUnopened,
+    };
+  }
+
+  return {
+    type: 'current',
+    openUnopenedNewMembers: includeOpenUnopened,
+  };
+}
 
 function closeWithConfirm(saveMode: ActivateWorkGroupSaveMode) {
   closeReason.value = 'confirm';
@@ -66,12 +99,12 @@ function confirm() {
     return;
   }
 
-  if (mode.value === 'create') {
-    closeWithConfirm({ type: 'create', name: newName.value.trim() });
+  const saveMode = buildSaveMode();
+  if (!saveMode) {
     return;
   }
 
-  closeWithConfirm({ type: 'current' });
+  closeWithConfirm(saveMode);
 }
 
 function discardAndSwitch() {
@@ -119,6 +152,40 @@ function handleOpenChange(open: boolean) {
         </DialogDescription>
       </DialogHeader>
 
+      <div
+        v-if="churn"
+        class="work-group-switch-save-dialog__churn"
+      >
+        <p>
+          {{ t('workGroups.switchChurnRelativeToSaved', {
+            added: churn.relativeToSaved.addedCount,
+            closed: churn.relativeToSaved.closedCount,
+          }) }}
+          <span
+            v-if="churn.relativeToSaved.closedCount > 0"
+            class="work-group-switch-save-dialog__closed"
+          >
+            {{ t('workGroups.switchChurnClosedEmphasis', {
+              closed: churn.relativeToSaved.closedCount,
+            }) }}
+          </span>
+        </p>
+        <p>
+          {{ t('workGroups.switchChurnRelativeToTarget', {
+            opened: churn.relativeToTarget.addedCount,
+            closed: churn.relativeToTarget.closedCount,
+          }) }}
+          <span
+            v-if="churn.relativeToTarget.closedCount > 0"
+            class="work-group-switch-save-dialog__closed"
+          >
+            {{ t('workGroups.switchChurnClosedEmphasis', {
+              closed: churn.relativeToTarget.closedCount,
+            }) }}
+          </span>
+        </p>
+      </div>
+
       <div class="work-group-switch-save-dialog__options">
         <button
           type="button"
@@ -155,6 +222,21 @@ function handleOpenChange(open: boolean) {
           :placeholder="t('workGroups.newNamePlaceholder')"
           @keydown.enter.prevent="confirm"
         />
+
+        <label
+          v-if="showOpenUnopenedOption"
+          class="work-group-switch-save-dialog__checkbox"
+        >
+          <input
+            v-model="openUnopenedNewMembers"
+            type="checkbox"
+          >
+          <span>
+            {{ t('workGroups.switchOpenUnopenedMembers', {
+              count: churn?.unopenedNewMemberPaths.length ?? 0,
+            }) }}
+          </span>
+        </label>
       </div>
 
       <DialogFooter class="work-group-switch-save-dialog__footer">
@@ -183,7 +265,25 @@ function handleOpenChange(open: boolean) {
 
 <style>
 .work-group-switch-save-dialog {
-  max-width: 480px;
+  max-width: 520px;
+}
+
+.work-group-switch-save-dialog__churn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+
+.work-group-switch-save-dialog__churn p {
+  margin: 0;
+}
+
+.work-group-switch-save-dialog__closed {
+  color: hsl(var(--destructive));
+  font-weight: 600;
 }
 
 .work-group-switch-save-dialog__options {
@@ -225,6 +325,15 @@ function handleOpenChange(open: boolean) {
 
 .work-group-switch-save-dialog__name-input {
   margin-top: 4px;
+}
+
+.work-group-switch-save-dialog__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .work-group-switch-save-dialog__footer {

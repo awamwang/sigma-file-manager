@@ -17,6 +17,7 @@ import ExtensionEmbed from '@/modules/extensions/components/extension-embed.vue'
 import CommandPalette from '@/modules/extensions/components/command-palette.vue';
 import ProjectsQuickPicker from '@/modules/dashboard/components/projects-quick-picker.vue';
 import ExtensionModalsContainer from '@/modules/extensions/components/extension-modals-container.vue';
+import WorkGroupPromptsHost from '@/modules/work-groups/components/work-group-prompts-host.vue';
 
 const userSettingsStore = useUserSettingsStore();
 const { activeEmbedPageId, visitedEmbedPages } = useEmbedPages();
@@ -34,6 +35,7 @@ const { activeEmbedPageId, visitedEmbedPages } = useEmbedPages();
     <CommandPalette />
     <ProjectsQuickPicker />
     <ExtensionModalsContainer />
+    <WorkGroupPromptsHost />
     <TooltipProvider :delay-duration="userSettingsStore.userSettings.tooltipDelayMs">
       <NavSidebar />
       <div class="app-layout__main">

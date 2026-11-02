@@ -35,6 +35,19 @@ export type UserWorkGroups = {
   activeWorkGroupId: string;
 };
 
+export type WorkGroupAlignedBaseline = {
+  workGroupId: string;
+  memberPaths: string[];
+  navigatorDefaults: NavigatorFolderSettings | null;
+};
+
+export type WorkGroupSessionAlignPending = {
+  workGroupId: string;
+  addedMemberPaths: string[];
+  removedMemberPaths: string[];
+  defaultsChanged: boolean;
+};
+
 export const DEFAULT_USER_WORK_GROUPS: UserWorkGroups = {
   workGroups: [],
   activeWorkGroupId: DEFAULT_WORK_GROUP_ID,

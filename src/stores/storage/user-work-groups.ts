@@ -10,7 +10,9 @@ import { useWorkspacesStore } from './workspaces';
 import type {
   UserWorkGroups,
   WorkGroup,
+  WorkGroupAlignedBaseline,
   WorkGroupOpenState,
+  WorkGroupSessionAlignPending,
 } from '@/types/user-work-groups';
 import {
   DEFAULT_USER_WORK_GROUPS,
@@ -25,13 +27,14 @@ import {
 } from './utils/startup-storage-bootstrap';
 import { normalizePathForComparison } from '@/utils/file-operation-paths';
 import { isExactMemberPath } from '@/utils/work-group-paths';
+import { diffOpenStatePaths } from '@/utils/work-group-open-state-diff';
 import uniqueId from '@/utils/unique-id';
 import clone from '@/utils/clone';
 
 export type ActivateWorkGroupSaveMode =
-  | { type: 'current' }
+  | { type: 'current'; openUnopenedNewMembers?: boolean }
   | { type: 'discard' }
-  | { type: 'create'; name: string };
+  | { type: 'create'; name: string; openUnopenedNewMembers?: boolean };
 
 function createDefaultWorkGroup(openState: WorkGroupOpenState | null = null): WorkGroup {
   return {
@@ -60,6 +63,8 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
   const userWorkGroupsStorage = ref<LazyStore | null>(null);
   const userWorkGroups = ref<UserWorkGroups>(structuredClone(DEFAULT_USER_WORK_GROUPS));
   const isInitialized = ref(false);
+  const alignedBaseline = ref<WorkGroupAlignedBaseline | null>(null);
+  const sessionAlignPending = ref<WorkGroupSessionAlignPending | null>(null);
 
   const workGroups = computed(() => userWorkGroups.value.workGroups);
 
@@ -70,6 +75,122 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     ?? userWorkGroups.value.workGroups.find(workGroup => workGroup.isDefault)
     ?? null
   ));
+
+  function captureAlignedBaseline(workGroup: WorkGroup | null = activeWorkGroup.value) {
+    if (!workGroup) {
+      alignedBaseline.value = null;
+      sessionAlignPending.value = null;
+      return;
+    }
+
+    alignedBaseline.value = {
+      workGroupId: workGroup.id,
+      memberPaths: [...workGroup.memberPaths],
+      navigatorDefaults: workGroup.navigatorDefaults ? clone(workGroup.navigatorDefaults) : null,
+    };
+    sessionAlignPending.value = null;
+  }
+
+  function recomputeSessionAlignPending() {
+    const active = activeWorkGroup.value;
+    const baseline = alignedBaseline.value;
+
+    if (!active || !baseline || baseline.workGroupId !== active.id) {
+      sessionAlignPending.value = null;
+      return;
+    }
+
+    const addedMemberPaths = active.memberPaths.filter(
+      path => !isExactMemberPath(path, baseline.memberPaths),
+    );
+    const removedMemberPaths = baseline.memberPaths.filter(
+      path => !isExactMemberPath(path, active.memberPaths),
+    );
+    const defaultsChanged = JSON.stringify(active.navigatorDefaults)
+      !== JSON.stringify(baseline.navigatorDefaults);
+
+    if (addedMemberPaths.length === 0 && removedMemberPaths.length === 0 && !defaultsChanged) {
+      sessionAlignPending.value = null;
+      return;
+    }
+
+    sessionAlignPending.value = {
+      workGroupId: active.id,
+      addedMemberPaths,
+      removedMemberPaths,
+      defaultsChanged,
+    };
+  }
+
+  function noteActiveDefinitionChanged(workGroupId: string) {
+    if (workGroupId !== userWorkGroups.value.activeWorkGroupId) {
+      return;
+    }
+
+    recomputeSessionAlignPending();
+  }
+
+  function listUnopenedMemberPaths(memberPaths?: string[]): string[] {
+    const active = activeWorkGroup.value;
+    const workspacesStore = useWorkspacesStore();
+    const workspace = workspacesStore.currentWorkspace;
+    const candidates = memberPaths ?? active?.memberPaths ?? [];
+
+    if (!active || !workspace) {
+      return [];
+    }
+
+    const openExactPaths = workspace.tabGroups.flatMap(tabGroup => (
+      tabGroup.map(tab => tab.path)
+    ));
+
+    return candidates.filter(path => !isExactMemberPath(path, openExactPaths));
+  }
+
+  async function openUnopenedMemberTabs(memberPaths?: string[]) {
+    const workspacesStore = useWorkspacesStore();
+    const pathsToOpen = listUnopenedMemberPaths(memberPaths);
+
+    for (const path of pathsToOpen) {
+      await workspacesStore.openOrFocusTabGroup(path);
+    }
+
+    return pathsToOpen;
+  }
+
+  async function applySessionAlign() {
+    const pending = sessionAlignPending.value;
+    const active = activeWorkGroup.value;
+
+    if (!pending || !active || pending.workGroupId !== active.id) {
+      captureAlignedBaseline(active);
+      return;
+    }
+
+    await openUnopenedMemberTabs(pending.addedMemberPaths);
+    captureAlignedBaseline(active);
+  }
+
+  function clearSessionAlignPending() {
+    sessionAlignPending.value = null;
+  }
+
+  function getSwitchOpenStateChurn(targetWorkGroupId: string | null) {
+    const workspacesStore = useWorkspacesStore();
+    const liveOpenState = workspacesStore.captureOpenStateSnapshot();
+    const active = activeWorkGroup.value;
+    const target = targetWorkGroupId ? getWorkGroupById(targetWorkGroupId) : null;
+
+    return {
+      relativeToSaved: diffOpenStatePaths(active?.openState, liveOpenState),
+      relativeToTarget: diffOpenStatePaths(liveOpenState, target?.openState),
+      unopenedNewMemberPaths: listUnopenedMemberPaths(
+        sessionAlignPending.value?.workGroupId === active?.id
+          ? sessionAlignPending.value.addedMemberPaths
+          : undefined,
+      ),
+    };
+  }
 
   async function initStorage() {
     try {
@@ -285,6 +406,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
         userWorkGroups.value.activeWorkGroupId = defaultGroup.id;
         const workspacesStore = useWorkspacesStore();
         await workspacesStore.applyOpenStateSnapshot(defaultGroup.openState);
+        captureAlignedBaseline(defaultGroup);
       }
     }
 
@@ -307,6 +429,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       navigatorDefaults: navigatorDefaults ? clone(navigatorDefaults) : null,
     });
     await saveWorkGroups();
+    noteActiveDefinitionChanged(id);
   }
 
   async function addMemberPath(workGroupId: string, path: string) {
@@ -326,6 +449,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       memberPaths: [...workGroup.memberPaths, path],
     });
     await saveWorkGroups();
+    noteActiveDefinitionChanged(workGroupId);
   }
 
   async function removeMemberPath(workGroupId: string, path: string) {
@@ -348,6 +472,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       memberPaths: nextMembers,
     });
     await saveWorkGroups();
+    noteActiveDefinitionChanged(workGroupId);
   }
 
   async function toggleMemberPath(workGroupId: string, path: string) {
@@ -396,6 +521,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
     if (hasChanges) {
       await saveWorkGroups();
+      noteActiveDefinitionChanged(userWorkGroups.value.activeWorkGroupId);
     }
   }
 
@@ -411,8 +537,21 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     }
 
     const workspacesStore = useWorkspacesStore();
-    const liveOpenState = workspacesStore.captureOpenStateSnapshot();
     const previousActiveId = userWorkGroups.value.activeWorkGroupId;
+    const shouldOpenUnopenedNewMembers = (
+      (saveMode?.type === 'current' || saveMode?.type === 'create')
+      && saveMode.openUnopenedNewMembers === true
+    );
+
+    if (shouldOpenUnopenedNewMembers) {
+      const pendingAdded = sessionAlignPending.value?.workGroupId === previousActiveId
+        ? sessionAlignPending.value.addedMemberPaths
+        : undefined;
+      await openUnopenedMemberTabs(pendingAdded);
+    }
+
+    // Capture after optional member-tab opens so saved Open State can include them.
+    const liveOpenState = workspacesStore.captureOpenStateSnapshot();
 
     if (saveMode?.type === 'current') {
       await writeOpenStateToWorkGroup(previousActiveId, liveOpenState);
@@ -435,6 +574,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     userWorkGroups.value.activeWorkGroupId = resolvedTarget.id;
     await saveWorkGroups();
     await workspacesStore.applyOpenStateSnapshot(resolvedTarget.openState);
+    captureAlignedBaseline(resolvedTarget);
     return true;
   }
 
@@ -529,38 +669,26 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
     if (hasChanges) {
       await saveWorkGroups();
+      // Renames update membership paths; refresh baseline paths without prompting.
+      if (alignedBaseline.value) {
+        const active = activeWorkGroup.value;
+        if (active && alignedBaseline.value.workGroupId === active.id) {
+          alignedBaseline.value = {
+            ...alignedBaseline.value,
+            memberPaths: alignedBaseline.value.memberPaths.map(memberPath => (
+              replacePathPrefix(memberPath, oldPath, newPath) ?? memberPath
+            )),
+          };
+        }
+      }
+      recomputeSessionAlignPending();
     }
   }
 
-  async function handlePathsDeleted(paths: string[]) {
-    const deletedPrefixes = paths
-      .map(path => normalizePathForComparison(path))
-      .filter(Boolean);
-    let hasChanges = false;
-
-    userWorkGroups.value.workGroups = userWorkGroups.value.workGroups.map((workGroup) => {
-      const nextMembers = workGroup.memberPaths.filter((memberPath) => {
-        const comparableMemberPath = normalizePathForComparison(memberPath);
-        return !deletedPrefixes.some(deletedPath => (
-          comparableMemberPath === deletedPath
-          || comparableMemberPath.startsWith(`${deletedPath}/`)
-        ));
-      });
-
-      if (nextMembers.length === workGroup.memberPaths.length) {
-        return workGroup;
-      }
-
-      hasChanges = true;
-      return {
-        ...workGroup,
-        memberPaths: nextMembers,
-      };
-    });
-
-    if (hasChanges) {
-      await saveWorkGroups();
-    }
+  // Missing Member Folders stay listed for the management page to flag.
+  // Do not auto-prune membership when paths disappear on disk.
+  async function handlePathsDeleted(_paths: string[]) {
+    return;
   }
 
   async function init(bootstrapFile?: StartupStorageFileBootstrap) {
@@ -572,6 +700,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       await loadWorkGroups();
     }
 
+    captureAlignedBaseline(activeWorkGroup.value);
     isInitialized.value = true;
   }
 
@@ -580,6 +709,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     workGroups,
     activeWorkGroup,
     isInitialized,
+    sessionAlignPending,
     init,
     getWorkGroupById,
     isOpenStateDirty,
@@ -595,6 +725,12 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     activateWorkGroup,
     openAllMembers,
     closeMemberTabs,
+    openUnopenedMemberTabs,
+    listUnopenedMemberPaths,
+    applySessionAlign,
+    clearSessionAlignPending,
+    captureAlignedBaseline,
+    getSwitchOpenStateChurn,
     handlePathRenamed,
     handlePathsDeleted,
   };
