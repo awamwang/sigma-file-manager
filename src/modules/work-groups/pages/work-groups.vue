@@ -252,22 +252,6 @@ if (workGroups.value[0]) {
             {{ t('workGroups.open') }}
           </Button>
           <Button
-            v-if="userWorkGroupsStore.activeWorkGroup?.id === selectedWorkGroup.id"
-            size="sm"
-            variant="outline"
-            @click="userWorkGroupsStore.openAllMembers()"
-          >
-            {{ t('workGroups.openAllMembers') }}
-          </Button>
-          <Button
-            v-if="userWorkGroupsStore.activeWorkGroup?.id === selectedWorkGroup.id"
-            size="sm"
-            variant="outline"
-            @click="userWorkGroupsStore.closeMemberTabs()"
-          >
-            {{ t('workGroups.closeMemberTabs') }}
-          </Button>
-          <Button
             v-if="!selectedWorkGroup.isDefault"
             size="sm"
             variant="destructive"

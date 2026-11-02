@@ -14,6 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -54,32 +57,44 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
         class="work-group-tab-bar-switcher__menu"
       >
         <DropdownMenuLabel>{{ t('workGroups.title') }}</DropdownMenuLabel>
-        <DropdownMenuItem
+        <DropdownMenuSub
           v-for="workGroup in userWorkGroupsStore.workGroups"
           :key="workGroup.id"
-          @select="activateWorkGroup(workGroup.id)"
         >
-          <span class="work-group-tab-bar-switcher__item-name">{{ workGroup.name }}</span>
-          <span
-            v-if="userWorkGroupsStore.activeWorkGroup?.id === workGroup.id"
-            class="work-group-tab-bar-switcher__badge work-group-tab-bar-switcher__badge--active"
+          <DropdownMenuSubTrigger
+            class="work-group-tab-bar-switcher__sub-trigger"
+            :class="{
+              'work-group-tab-bar-switcher__sub-trigger--active':
+                userWorkGroupsStore.activeWorkGroup?.id === workGroup.id,
+            }"
           >
-            {{ t('workGroups.active') }}
-          </span>
-          <span
-            v-else-if="workGroup.isDefault"
-            class="work-group-tab-bar-switcher__badge"
-          >
-            {{ t('workGroups.defaultBadge') }}
-          </span>
-        </DropdownMenuItem>
+            <span class="work-group-tab-bar-switcher__item-name">{{ workGroup.name }}</span>
+            <span
+              v-if="workGroup.isDefault"
+              class="work-group-tab-bar-switcher__badge"
+            >
+              {{ t('workGroups.defaultBadge') }}
+            </span>
+            <span
+              v-if="userWorkGroupsStore.activeWorkGroup?.id === workGroup.id"
+              class="work-group-tab-bar-switcher__badge work-group-tab-bar-switcher__badge--active"
+            >
+              {{ t('workGroups.active') }}
+            </span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent class="work-group-tab-bar-switcher__sub-menu">
+            <DropdownMenuItem @select="activateWorkGroup(workGroup.id)">
+              {{ t('workGroups.open') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @select="userWorkGroupsStore.openAllMembers(workGroup.id)">
+              {{ t('workGroups.openAllMembers') }}
+            </DropdownMenuItem>
+            <DropdownMenuItem @select="userWorkGroupsStore.closeMemberTabs(workGroup.id)">
+              {{ t('workGroups.closeMemberTabs') }}
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem @select="userWorkGroupsStore.openAllMembers()">
-          {{ t('workGroups.openAllMembers') }}
-        </DropdownMenuItem>
-        <DropdownMenuItem @select="userWorkGroupsStore.closeMemberTabs()">
-          {{ t('workGroups.closeMemberTabs') }}
-        </DropdownMenuItem>
         <DropdownMenuItem @select="router.push({ name: 'work-groups' })">
           {{ t('pages.work-groups') }}
         </DropdownMenuItem>
@@ -120,17 +135,37 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
   min-width: 220px;
 }
 
+.work-group-tab-bar-switcher__sub-menu {
+  min-width: 180px;
+}
+
+.work-group-tab-bar-switcher__sub-trigger {
+  gap: 6px;
+}
+
+.work-group-tab-bar-switcher__sub-trigger--active {
+  background-color: hsl(var(--accent));
+}
+
 .work-group-tab-bar-switcher__item-name {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .work-group-tab-bar-switcher__badge {
-  margin-left: 8px;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: hsl(var(--muted));
   color: hsl(var(--muted-foreground));
   font-size: 11px;
 }
 
 .work-group-tab-bar-switcher__badge--active {
+  background: hsl(var(--primary) / 0.15);
   color: hsl(var(--primary));
 }
 </style>

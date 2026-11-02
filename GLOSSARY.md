@@ -41,11 +41,11 @@ A Member Folder whose directory path no longer exists on disk. The management pa
 _Avoid_: orphan path, broken shortcut, auto-prune
 
 **Open All Members**:
-An action that ensures each Member Folder of the Active Work Group has a Navigator tab (focus existing, otherwise open). Available from the Work Group management page and the tab-bar Work Group switcher.
+An action that ensures each Member Folder of a chosen Work Group has a Navigator tab (focus existing, otherwise open). Available as a per-group submenu item in the tab-bar Work Group switcher; operates on the live Navigator session, not saved Open State.
 _Avoid_: open Work Group, restore Open State
 
 **Close Member Tabs**:
-An action that closes Navigator tabs whose path exactly equals a Member Folder of the Active Work Group (descendant paths are left alone). Available from the management page and the tab-bar switcher.
+An action that closes Navigator tabs whose path exactly equals a Member Folder of a chosen Work Group (descendant paths are left alone). Available as a per-group submenu item in the tab-bar Work Group switcher; operates on the live Navigator session, not saved Open State.
 _Avoid_: close Work Group, clear Open State
 
 **Workspace**:

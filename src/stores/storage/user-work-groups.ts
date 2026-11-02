@@ -669,33 +669,37 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     return true;
   }
 
-  async function openAllMembers() {
-    const active = activeWorkGroup.value;
+  async function openAllMembers(workGroupId?: string) {
+    const workGroup = workGroupId
+      ? getWorkGroupById(workGroupId)
+      : activeWorkGroup.value;
 
-    if (!active) {
+    if (!workGroup) {
       return;
     }
 
     const workspacesStore = useWorkspacesStore();
 
-    for (const memberPath of active.memberPaths) {
+    for (const memberPath of workGroup.memberPaths) {
       await workspacesStore.openOrFocusTabGroup(memberPath);
     }
   }
 
-  async function closeMemberTabs() {
-    const active = activeWorkGroup.value;
+  async function closeMemberTabs(workGroupId?: string) {
+    const workGroup = workGroupId
+      ? getWorkGroupById(workGroupId)
+      : activeWorkGroup.value;
     const workspacesStore = useWorkspacesStore();
     const workspace = workspacesStore.currentWorkspace;
 
-    if (!active || !workspace) {
+    if (!workGroup || !workspace) {
       return;
     }
 
     const indicesToClose: number[] = [];
 
     workspace.tabGroups.forEach((tabGroup, index) => {
-      const hasExactMemberTab = tabGroup.some(tab => isExactMemberPath(tab.path, active.memberPaths));
+      const hasExactMemberTab = tabGroup.some(tab => isExactMemberPath(tab.path, workGroup.memberPaths));
 
       if (hasExactMemberTab) {
         indicesToClose.push(index);
