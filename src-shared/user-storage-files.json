@@ -5,6 +5,7 @@
     "workspaces": "user-workspaces.json",
     "userStats": "user-stats.json",
     "userProjects": "user-projects.json",
+    "userWorkGroups": "user-work-groups.json",
     "extensions": "user-extensions.json"
   },
   "legacyFileNames": {

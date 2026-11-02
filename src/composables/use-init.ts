@@ -8,6 +8,7 @@ import { useUserPathsStore } from '@/stores/storage/user-paths';
 import { useUserSettingsStore } from '@/stores/storage/user-settings';
 import { useUserStatsStore } from '@/stores/storage/user-stats';
 import { useUserProjectsStore } from '@/stores/storage/user-projects';
+import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
 import { useWorkspacesStore } from '@/stores/storage/workspaces';
 import { usePlatformStore } from '@/stores/runtime/platform';
 import { useGlobalSearchStore } from '@/stores/runtime/global-search';
@@ -68,6 +69,7 @@ export function useInit() {
   const userSettingsStore = useUserSettingsStore();
   const userStatsStore = useUserStatsStore();
   const userProjectsStore = useUserProjectsStore();
+  const userWorkGroupsStore = useUserWorkGroupsStore();
   const workspacesStore = useWorkspacesStore();
   const userPathsStore = useUserPathsStore();
   const platformStore = usePlatformStore();
@@ -360,6 +362,7 @@ export function useInit() {
       'workspacesStore.init',
       () => workspacesStore.init(undefined, { loadInitialTabGroup: false }),
     );
+    await traceInitStep('userWorkGroupsStore.init', () => userWorkGroupsStore.init());
 
     if (isMainWindow) {
       initialLaunchContext = await traceInitStep(

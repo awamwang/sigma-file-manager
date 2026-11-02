@@ -35,6 +35,7 @@ const {
   terminalsInitMock,
   userPathsInitMock,
   userProjectsInitMock,
+  userWorkGroupsInitMock,
   userSettingsInitMock,
   userStatsInitMock,
   userStatsRunDeferredMaintenanceMock,
@@ -72,6 +73,7 @@ const {
   terminalsInitMock: vi.fn(),
   userPathsInitMock: vi.fn(),
   userProjectsInitMock: vi.fn(),
+  userWorkGroupsInitMock: vi.fn(),
   userSettingsInitMock: vi.fn(),
   userStatsInitMock: vi.fn(),
   userStatsRunDeferredMaintenanceMock: vi.fn(),
@@ -164,6 +166,12 @@ vi.mock('@/stores/storage/user-projects', () => ({
   useUserProjectsStore: () => ({
     init: userProjectsInitMock,
     addProject: userProjectsAddProjectMock,
+  }),
+}));
+
+vi.mock('@/stores/storage/user-work-groups', () => ({
+  useUserWorkGroupsStore: () => ({
+    init: userWorkGroupsInitMock,
   }),
 }));
 
@@ -388,6 +396,8 @@ describe('useInit startup restoration', () => {
     showWindowMock.mockReset().mockResolvedValue(undefined);
     terminalsInitMock.mockReset().mockResolvedValue(undefined);
     userPathsInitMock.mockReset().mockResolvedValue(undefined);
+    userProjectsInitMock.mockReset().mockResolvedValue(undefined);
+    userWorkGroupsInitMock.mockReset().mockResolvedValue(undefined);
     userSettingsInitMock.mockReset().mockResolvedValue(undefined);
     userStatsInitMock.mockReset().mockResolvedValue(undefined);
     userStatsRunDeferredMaintenanceMock.mockReset().mockResolvedValue(undefined);

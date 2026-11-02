@@ -19,6 +19,7 @@ export interface StartupStorageBootstrap {
   workspaces: StartupStorageFileBootstrap;
   userStats: StartupStorageFileBootstrap;
   userProjects: StartupStorageFileBootstrap;
+  userWorkGroups: StartupStorageFileBootstrap;
   extensions: StartupStorageFileBootstrap;
 }
 

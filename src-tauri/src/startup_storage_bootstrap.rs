@@ -36,6 +36,7 @@ pub struct StartupStorageBootstrapPayload {
     workspaces: StartupStorageFileBootstrap,
     user_stats: StartupStorageFileBootstrap,
     user_projects: StartupStorageFileBootstrap,
+    user_work_groups: StartupStorageFileBootstrap,
     extensions: StartupStorageFileBootstrap,
 }
 
@@ -215,6 +216,13 @@ fn build_error_payload(error: String) -> StartupStorageBootstrapPayload {
             schema_version: None,
             error: file_error.clone(),
         },
+        user_work_groups: StartupStorageFileBootstrap {
+            path: empty_path.clone(),
+            status: ERROR_STATUS,
+            data: None,
+            schema_version: None,
+            error: file_error.clone(),
+        },
         extensions: StartupStorageFileBootstrap {
             path: empty_path,
             status: ERROR_STATUS,
@@ -248,6 +256,10 @@ fn load_startup_storage_bootstrap(app_handle: &tauri::AppHandle) -> StartupStora
         user_stats: load_storage_file(&app_user_data_dir.join(&file_names.user_stats), None),
         user_projects: load_storage_file(
             &app_user_data_dir.join(&file_names.user_projects),
+            None,
+        ),
+        user_work_groups: load_storage_file(
+            &app_user_data_dir.join(&file_names.user_work_groups),
             None,
         ),
         extensions: load_storage_file(&app_user_data_dir.join(&file_names.extensions), None),

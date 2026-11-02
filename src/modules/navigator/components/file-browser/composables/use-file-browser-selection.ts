@@ -10,6 +10,7 @@ import type { ContextMenuAction } from '@/modules/navigator/components/file-brow
 import { useWorkspacesStore } from '@/stores/storage/workspaces';
 import { useUserStatsStore } from '@/stores/storage/user-stats';
 import { useUserProjectsStore } from '@/stores/storage/user-projects';
+import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
 import { useUserSettingsStore } from '@/stores/storage/user-settings';
 import {
   useClipboardStore,
@@ -62,6 +63,7 @@ export function useFileBrowserSelection(
   const workspacesStore = useWorkspacesStore();
   const userStatsStore = useUserStatsStore();
   const userProjectsStore = useUserProjectsStore();
+  const userWorkGroupsStore = useUserWorkGroupsStore();
   const userSettingsStore = useUserSettingsStore();
   const clipboardStore = useClipboardStore();
   const dirSizesStore = useDirSizesStore();
@@ -807,6 +809,7 @@ export function useFileBrowserSelection(
         workspacesStore.handlePathRenamed(oldPath, newPath);
         userStatsStore.handlePathRenamed(oldPath, newPath);
         userProjectsStore.handlePathRenamed(oldPath, newPath);
+        userWorkGroupsStore.handlePathRenamed(oldPath, newPath);
         userSettingsStore.handlePathRenamed(oldPath, newPath);
 
         dirSizesStore.invalidate([entry.path, currentPathRef.value]);
@@ -1136,6 +1139,7 @@ export function useFileBrowserSelection(
           workspacesStore.handlePathsDeleted(result.deletedPaths);
           userStatsStore.handlePathsDeleted(result.deletedPaths);
           userProjectsStore.handlePathsDeleted(result.deletedPaths);
+          userWorkGroupsStore.handlePathsDeleted(result.deletedPaths);
           userSettingsStore.handlePathsDeleted(result.deletedPaths);
 
           dirSizesStore.invalidate([currentPathRef.value, ...result.deletedPaths]);

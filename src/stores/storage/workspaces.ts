@@ -31,6 +31,7 @@ import {
 import uniqueId from '@/utils/unique-id';
 import type { DirContents, DirEntry } from '@/types/dir-entry';
 import type { Workspace, Tab, TabGroup } from '@/types/workspaces';
+import type { WorkGroupOpenState } from '@/types/user-work-groups';
 import type { ComputedRef } from 'vue';
 import {
   migrateWorkspacesStorage,
@@ -642,6 +643,66 @@ export const useWorkspacesStore = defineStore('workspaces', () => {
     setCurrentTabGroupIndex(newCurrentTabGroupIndex);
   }
 
+  function captureOpenStateSnapshot(): WorkGroupOpenState {
+    const workspace = currentWorkspace.value;
+
+    if (!workspace) {
+      return {
+        tabGroups: [],
+        currentTabGroupIndex: 0,
+        currentTabIndex: 0,
+      };
+    }
+
+    return {
+      currentTabGroupIndex: workspace.currentTabGroupIndex,
+      currentTabIndex: workspace.currentTabIndex,
+      tabGroups: workspace.tabGroups.map(tabGroup => tabGroup.map(tab => ({
+        id: tab.id,
+        name: tab.name,
+        path: tab.path,
+        type: tab.type,
+        paneWidth: tab.paneWidth,
+        filterQuery: tab.filterQuery,
+      }))),
+    };
+  }
+
+  async function applyOpenStateSnapshot(snapshot: WorkGroupOpenState | null) {
+    if (!currentWorkspace.value) {
+      return;
+    }
+
+    if (!snapshot || snapshot.tabGroups.length === 0) {
+      const defaultTab = await createNewTab();
+      currentWorkspace.value.tabGroups = [[defaultTab]];
+      currentWorkspace.value.currentTabGroupIndex = 0;
+      currentWorkspace.value.currentTabIndex = 0;
+      await loadCurrentTabGroup();
+      return;
+    }
+
+    currentWorkspace.value.tabGroups = snapshot.tabGroups.map(tabGroup => tabGroup.map(tab => ({
+      id: tab.id,
+      name: tab.name,
+      path: tab.path,
+      type: tab.type,
+      paneWidth: tab.paneWidth,
+      filterQuery: tab.filterQuery,
+      dirEntries: [],
+      selectedDirEntries: [],
+    })));
+
+    const maxTabGroupIndex = Math.max(0, currentWorkspace.value.tabGroups.length - 1);
+    const nextTabGroupIndex = Math.min(Math.max(0, snapshot.currentTabGroupIndex), maxTabGroupIndex);
+    currentWorkspace.value.currentTabGroupIndex = nextTabGroupIndex;
+
+    const maxTabIndex = Math.max(0, (currentWorkspace.value.tabGroups[nextTabGroupIndex]?.length ?? 1) - 1);
+    currentWorkspace.value.currentTabIndex = Math.min(Math.max(0, snapshot.currentTabIndex), maxTabIndex);
+
+    await loadCurrentTabGroup();
+  }
+
   async function loadTabGroupDirEntries(tabGroup: TabGroup, options: { timeoutMs?: number } = {}) {
     await Promise.all(tabGroup.map(async (tab: Tab) => {
       if (tab.type === 'directory') {
@@ -1012,6 +1073,8 @@ export const useWorkspacesStore = defineStore('workspaces', () => {
     hasDuplicatePathTabs,
     setCurrentTabIndex,
     setTabs,
+    captureOpenStateSnapshot,
+    applyOpenStateSnapshot,
     toggleSplitView,
     setTabFilterQuery,
     setPendingLaunchReveal,
