@@ -2,75 +2,126 @@
 // License: GNU GPLv3 or later. See the license file in the project root for more information.
 // Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 
-import { computed, ref, watch, type Ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
 import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
-import type { WorkGroupSessionAlignPending } from '@/types/user-work-groups';
 
-function pendingFingerprint(pending: WorkGroupSessionAlignPending | null): string | null {
-  if (!pending) {
-    return null;
-  }
-
-  return JSON.stringify({
-    workGroupId: pending.workGroupId,
-    addedMemberPaths: pending.addedMemberPaths,
-    removedMemberPaths: pending.removedMemberPaths,
-    defaultsChanged: pending.defaultsChanged,
-  });
-}
-
-type WorkGroupSessionAlignApi = {
-  promptOpen: Ref<boolean>;
-  pending: Ref<WorkGroupSessionAlignPending | null>;
-  confirmAlign: () => Promise<void>;
-  deferAlign: () => void;
-  setSwitchPromptBlocking: (blocking: boolean) => void;
-};
-
-let sharedApi: WorkGroupSessionAlignApi | null = null;
-
-export function useWorkGroupSessionAlign(): WorkGroupSessionAlignApi {
-  if (sharedApi) {
-    return sharedApi;
-  }
-
+export function useWorkGroupSessionAlign() {
   const route = useRoute();
   const userWorkGroupsStore = useUserWorkGroupsStore();
+  const {
+    sessionAlignPending,
+    sessionAlignAutoApplyOnNavigator,
+    sessionAlignSwitchBlocked,
+  } = storeToRefs(userWorkGroupsStore);
+
   const promptOpen = ref(false);
   const suppressedFingerprint = ref<string | null>(null);
-  const switchPromptBlocksAlign = ref(false);
 
   const isOnNavigator = computed(() => route.name === 'navigator');
-  const pending = computed(() => userWorkGroupsStore.sessionAlignPending);
+
+  function pendingFingerprint(): string | null {
+    const pending = sessionAlignPending.value;
+    if (!pending) {
+      return null;
+    }
+
+    return JSON.stringify({
+      workGroupId: pending.workGroupId,
+      addedMemberPaths: pending.addedMemberPaths,
+      removedMemberPaths: pending.removedMemberPaths,
+      defaultsChanged: pending.defaultsChanged,
+    });
+  }
+
+  function shouldShowPrompt(): boolean {
+    const fingerprint = pendingFingerprint();
+    return Boolean(
+      fingerprint
+      && isOnNavigator.value
+      && !sessionAlignSwitchBlocked.value
+      && !sessionAlignAutoApplyOnNavigator.value
+      && fingerprint !== suppressedFingerprint.value,
+    );
+  }
 
   function syncPromptVisibility() {
-    const fingerprint = pendingFingerprint(pending.value);
+    promptOpen.value = shouldShowPrompt();
+  }
 
-    if (
-      !fingerprint
-      || !isOnNavigator.value
-      || switchPromptBlocksAlign.value
-      || fingerprint === suppressedFingerprint.value
-    ) {
+  async function resumePendingOnNavigator() {
+    if (!isOnNavigator.value || sessionAlignSwitchBlocked.value) {
+      syncPromptVisibility();
+      return;
+    }
+
+    if (!sessionAlignPending.value) {
       promptOpen.value = false;
       return;
     }
 
-    promptOpen.value = true;
+    if (sessionAlignAutoApplyOnNavigator.value) {
+      await userWorkGroupsStore.applySessionAlign();
+      suppressedFingerprint.value = null;
+      promptOpen.value = false;
+      return;
+    }
+
+    syncPromptVisibility();
   }
 
   watch(
-    [pending, isOnNavigator, switchPromptBlocksAlign],
-    () => {
-      if (!isOnNavigator.value) {
+    sessionAlignPending,
+    (pending) => {
+      if (!pending) {
         suppressedFingerprint.value = null;
+        promptOpen.value = false;
+        return;
+      }
+
+      if (isOnNavigator.value) {
+        // Mutation happened while already on Navigator → ask, don't auto-apply.
+        sessionAlignAutoApplyOnNavigator.value = false;
+        syncPromptVisibility();
+        return;
+      }
+
+      // Away from Navigator: keep auto-apply so returning resumes opens.
+      promptOpen.value = false;
+    },
+    { deep: true },
+  );
+
+  watch(
+    isOnNavigator,
+    async (onNavigator, wasOnNavigator) => {
+      if (!onNavigator) {
+        suppressedFingerprint.value = null;
+        promptOpen.value = false;
+        return;
+      }
+
+      // Entering Navigator (including first paint) should resume pending sync.
+      if (wasOnNavigator === false || wasOnNavigator === undefined) {
+        await nextTick();
+        await resumePendingOnNavigator();
+        return;
       }
 
       syncPromptVisibility();
     },
-    { deep: true, immediate: true },
+    { immediate: true },
   );
+
+  watch(sessionAlignSwitchBlocked, (blocked) => {
+    if (blocked) {
+      promptOpen.value = false;
+      return;
+    }
+
+    void resumePendingOnNavigator();
+  });
 
   async function confirmAlign() {
     await userWorkGroupsStore.applySessionAlign();
@@ -79,27 +130,15 @@ export function useWorkGroupSessionAlign(): WorkGroupSessionAlignApi {
   }
 
   function deferAlign() {
-    suppressedFingerprint.value = pendingFingerprint(pending.value);
+    suppressedFingerprint.value = pendingFingerprint();
+    sessionAlignAutoApplyOnNavigator.value = false;
     promptOpen.value = false;
   }
 
-  function setSwitchPromptBlocking(blocking: boolean) {
-    switchPromptBlocksAlign.value = blocking;
-    if (blocking) {
-      promptOpen.value = false;
-    }
-    else {
-      syncPromptVisibility();
-    }
-  }
-
-  sharedApi = {
+  return {
     promptOpen,
-    pending,
+    pending: sessionAlignPending,
     confirmAlign,
     deferAlign,
-    setSwitchPromptBlocking,
   };
-
-  return sharedApi;
 }

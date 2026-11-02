@@ -2,25 +2,23 @@
 // License: GNU GPLv3 or later. See the license file in the project root for more information.
 // Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 
-import { ref, watch } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   useUserWorkGroupsStore,
   type ActivateWorkGroupSaveMode,
 } from '@/stores/storage/user-work-groups';
-import { useWorkGroupSessionAlign } from '@/modules/work-groups/composables/use-work-group-session-align';
 
 export function useWorkGroupActivation() {
   const router = useRouter();
   const userWorkGroupsStore = useUserWorkGroupsStore();
-  const { setSwitchPromptBlocking } = useWorkGroupSessionAlign();
 
   const switchPromptOpen = ref(false);
   const pendingTargetWorkGroupId = ref<string | null>(null);
   const pendingNavigateToNavigator = ref(false);
 
   watch(switchPromptOpen, (open) => {
-    setSwitchPromptBlocking(open);
+    userWorkGroupsStore.setSessionAlignSwitchBlocked(open);
   });
 
   async function activateWorkGroup(
@@ -32,6 +30,12 @@ export function useWorkGroupActivation() {
     if (targetId === userWorkGroupsStore.activeWorkGroup?.id) {
       if (navigateToNavigator) {
         await router.push({ name: 'navigator' });
+        // Same Active group: resume pending member opens after landing on Navigator.
+        await nextTick();
+        if (userWorkGroupsStore.sessionAlignPending) {
+          userWorkGroupsStore.sessionAlignAutoApplyOnNavigator = true;
+          await userWorkGroupsStore.applySessionAlign();
+        }
       }
 
       return;

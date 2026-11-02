@@ -62,9 +62,13 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
   const userWorkGroupsStorage = ref<LazyStore | null>(null);
   const userWorkGroups = ref<UserWorkGroups>(structuredClone(DEFAULT_USER_WORK_GROUPS));
   const isInitialized = ref(false);
-  // Active-only mutation delta for Session Align Prompt. No per-group historical baseline:
+  // Active-only mutation delta for Session Align. No per-group historical baseline:
   // the goal is keeping the Active session in sync with definition writes.
   const sessionAlignPending = ref<WorkGroupSessionAlignPending | null>(null);
+  // When true, the next time Navigator becomes visible we auto-apply pending
+  // (edits happened while away). When false, show the Session Align Prompt instead.
+  const sessionAlignAutoApplyOnNavigator = ref(false);
+  const sessionAlignSwitchBlocked = ref(false);
 
   const workGroups = computed(() => userWorkGroups.value.workGroups);
 
@@ -78,6 +82,11 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
   function clearSessionAlignPending() {
     sessionAlignPending.value = null;
+    sessionAlignAutoApplyOnNavigator.value = false;
+  }
+
+  function setSessionAlignSwitchBlocked(blocked: boolean) {
+    sessionAlignSwitchBlocked.value = blocked;
   }
 
   function isPendingEmpty(pending: WorkGroupSessionAlignPending): boolean {
@@ -124,7 +133,14 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       defaultsChanged: pending.defaultsChanged,
     };
 
-    sessionAlignPending.value = isPendingEmpty(nextPending) ? null : nextPending;
+    if (isPendingEmpty(nextPending)) {
+      clearSessionAlignPending();
+      return;
+    }
+
+    sessionAlignPending.value = nextPending;
+    // Host turns this off when the edit happens while already on Navigator.
+    sessionAlignAutoApplyOnNavigator.value = true;
   }
 
   function noteActiveMemberRemoved(workGroupId: string, path: string) {
@@ -145,7 +161,13 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       defaultsChanged: pending.defaultsChanged,
     };
 
-    sessionAlignPending.value = isPendingEmpty(nextPending) ? null : nextPending;
+    if (isPendingEmpty(nextPending)) {
+      clearSessionAlignPending();
+      return;
+    }
+
+    sessionAlignPending.value = nextPending;
+    sessionAlignAutoApplyOnNavigator.value = true;
   }
 
   function noteActiveDefaultsChanged(workGroupId: string) {
@@ -159,6 +181,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       ...pending,
       defaultsChanged: true,
     };
+    sessionAlignAutoApplyOnNavigator.value = true;
   }
 
   function listMemberPathsNotInReference(
@@ -778,6 +801,8 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     activeWorkGroup,
     isInitialized,
     sessionAlignPending,
+    sessionAlignAutoApplyOnNavigator,
+    sessionAlignSwitchBlocked,
     init,
     getWorkGroupById,
     isOpenStateDirty,
@@ -797,6 +822,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     listUnopenedMemberPaths,
     applySessionAlign,
     clearSessionAlignPending,
+    setSessionAlignSwitchBlocked,
     getSwitchOpenStateChurn,
     handlePathRenamed,
     handlePathsDeleted,
