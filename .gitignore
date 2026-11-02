@@ -34,3 +34,4 @@ flatpak/.build/
 flatpak/.repo/
 flatpak/output/
 .flatpak-builder/
+docs/project-manager/

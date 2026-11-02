@@ -33,7 +33,7 @@ When leaving the Active Work Group to activate another, if Open State is dirty, 
 _Avoid_: autosave, silent save
 
 **Session Align Prompt** (会话对齐提示):
-When the Active Work Group’s definition changes (Member Folders or Group Navigator Defaults) while the user is on Navigator, a single coalesced prompt asks whether to align the live session: re-apply Group Navigator Defaults, and open tabs only for newly added Member Folders that do not already have an exact-path tab. Removed members never auto-close tabs. Declining defers alignment only; the definition is already committed. Edits made while not on Navigator stay silent until the user returns to Navigator with that group still Active. Renaming alone does not raise this prompt.
+When the Active Work Group’s definition changes (Member Folders or Group Navigator Defaults) while the user is on Navigator, a single coalesced prompt asks whether to align the live session: re-apply Group Navigator Defaults, and open tabs only for newly added Member Folders that do not already have an exact-path tab. Removed members never auto-close tabs. Declining defers alignment only; the definition is already committed. Edits made while not on Navigator stay silent until the user returns to Navigator with that group still Active. Edits to an inactive Work Group are remembered against that group’s aligned baseline; activating the group applies the same membership alignment automatically after its Open State is restored (no second prompt). Renaming alone does not raise this prompt.
 _Avoid_: sync dialog, reload work group, refresh members
 
 **Missing Member Folder** (失效成员):
