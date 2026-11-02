@@ -29,8 +29,16 @@ Work Group–level defaults for Navigator presentation (layout, list/grid sort, 
 _Avoid_: folder settings, theme, workspace settings
 
 **Switch Save Prompt**:
-When leaving the Active Work Group to activate another, if Open State is dirty, the user chooses where to persist it: the current Work Group, or a newly named Work Group. Creating a new Work Group here copies the current Open State, Member Folders, and Group Navigator Defaults. Other existing Work Groups are not valid save targets. The user may discard changes and switch, or cancel. After save or discard, the originally chosen target becomes Active. A Work Group created from the management page starts empty instead.
+When leaving the Active Work Group to activate another, if Open State is dirty, the user chooses where to persist it: the current Work Group, or a newly named Work Group. Creating a new Work Group here copies the current Open State, Member Folders, and Group Navigator Defaults. Other existing Work Groups are not valid save targets. The user may discard changes and switch, or cancel. After save or discard, the originally chosen target becomes Active. A Work Group created from the management page starts empty instead. The prompt summarizes Open State churn: tabs added vs closed relative to the current group’s saved Open State, and tabs that would close vs open when replacing with the target’s Open State; closed counts are emphasized. If new Member Folders exist but still lack exact-path tabs, the prompt may offer to open those tabs before saving so the written Open State can include them. A pending Session Align Prompt is superseded by this flow.
 _Avoid_: autosave, silent save
+
+**Session Align Prompt** (会话对齐提示):
+When the Active Work Group’s definition changes (Member Folders or Group Navigator Defaults) while the user is on Navigator, a single coalesced prompt asks whether to align the live session: re-apply Group Navigator Defaults, and open tabs only for newly added Member Folders that do not already have an exact-path tab. Removed members never auto-close tabs. Declining defers alignment only; the definition is already committed. Edits made while not on Navigator stay silent until the user returns to Navigator with that group still Active. Renaming alone does not raise this prompt.
+_Avoid_: sync dialog, reload work group, refresh members
+
+**Missing Member Folder** (失效成员):
+A Member Folder whose directory path no longer exists on disk. The management page keeps it listed with a clear error state so the user can remove it deliberately. Navigator session alignment does not silently delete it from the definition or prompt solely because the path vanished.
+_Avoid_: orphan path, broken shortcut, auto-prune
 
 **Open All Members**:
 An action that ensures each Member Folder of the Active Work Group has a Navigator tab (focus existing, otherwise open). Available from the Work Group management page and the tab-bar Work Group switcher.
