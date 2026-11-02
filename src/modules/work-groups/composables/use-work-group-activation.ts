@@ -15,13 +15,16 @@ export function useWorkGroupActivation() {
 
   const switchPromptOpen = ref(false);
   const pendingTargetWorkGroupId = ref<string | null>(null);
+  const pendingNavigateToNavigator = ref(false);
 
   async function activateWorkGroup(
     targetId: string,
     options?: { navigateToNavigator?: boolean },
   ) {
+    const navigateToNavigator = options?.navigateToNavigator === true;
+
     if (targetId === userWorkGroupsStore.activeWorkGroup?.id) {
-      if (options?.navigateToNavigator) {
+      if (navigateToNavigator) {
         await router.push({ name: 'navigator' });
       }
 
@@ -30,30 +33,38 @@ export function useWorkGroupActivation() {
 
     if (userWorkGroupsStore.isOpenStateDirty()) {
       pendingTargetWorkGroupId.value = targetId;
+      pendingNavigateToNavigator.value = navigateToNavigator;
       switchPromptOpen.value = true;
       return;
     }
 
     await userWorkGroupsStore.activateWorkGroup(targetId);
-    if (options?.navigateToNavigator) {
+    if (navigateToNavigator) {
       await router.push({ name: 'navigator' });
     }
   }
 
   async function confirmSwitch(saveMode: ActivateWorkGroupSaveMode) {
     const targetId = pendingTargetWorkGroupId.value;
+    const navigateToNavigator = pendingNavigateToNavigator.value;
+
+    pendingTargetWorkGroupId.value = null;
+    pendingNavigateToNavigator.value = false;
 
     if (!targetId) {
       return;
     }
 
-    pendingTargetWorkGroupId.value = null;
     await userWorkGroupsStore.activateWorkGroup(targetId, saveMode);
-    await router.push({ name: 'navigator' });
+
+    if (navigateToNavigator) {
+      await router.push({ name: 'navigator' });
+    }
   }
 
   function cancelSwitch() {
     pendingTargetWorkGroupId.value = null;
+    pendingNavigateToNavigator.value = false;
   }
 
   return {

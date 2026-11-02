@@ -34,6 +34,7 @@ const userWorkGroupsStore = useUserWorkGroupsStore();
 
 const mode = ref<'current' | 'create'>('current');
 const newName = ref('');
+const closeReason = ref<'confirm' | 'cancel' | null>(null);
 
 const activeWorkGroup = computed(() => userWorkGroupsStore.activeWorkGroup);
 const canConfirm = computed(() => {
@@ -51,7 +52,14 @@ watch(isOpen, (open) => {
 
   mode.value = 'current';
   newName.value = '';
+  closeReason.value = null;
 });
+
+function closeWithConfirm(saveMode: ActivateWorkGroupSaveMode) {
+  closeReason.value = 'confirm';
+  emit('confirmed', saveMode);
+  isOpen.value = false;
+}
 
 function confirm() {
   if (!canConfirm.value) {
@@ -59,30 +67,49 @@ function confirm() {
   }
 
   if (mode.value === 'create') {
-    emit('confirmed', { type: 'create', name: newName.value.trim() });
-  }
-  else {
-    emit('confirmed', { type: 'current' });
+    closeWithConfirm({ type: 'create', name: newName.value.trim() });
+    return;
   }
 
-  isOpen.value = false;
+  closeWithConfirm({ type: 'current' });
 }
 
 function discardAndSwitch() {
-  emit('confirmed', { type: 'discard' });
-  isOpen.value = false;
+  closeWithConfirm({ type: 'discard' });
 }
 
 function cancel() {
+  closeReason.value = 'cancel';
   emit('cancelled');
   isOpen.value = false;
+}
+
+function handleOpenChange(open: boolean) {
+  if (open) {
+    return;
+  }
+
+  if (closeReason.value === 'confirm') {
+    closeReason.value = null;
+    return;
+  }
+
+  if (closeReason.value === 'cancel') {
+    closeReason.value = null;
+    return;
+  }
+
+  emit('cancelled');
 }
 </script>
 
 <template>
   <Dialog
-    v-model:open="isOpen"
-    @update:open="(open) => { if (!open) cancel(); }"
+    :open="isOpen"
+    @update:open="(open) => {
+      isOpen = open;
+      handleOpenChange(open);
+    }"
   >
     <DialogContent class="work-group-switch-save-dialog">
       <DialogHeader>

@@ -18,38 +18,53 @@ import {
   type NavigatorFolderSettingsPatch,
   type NavigatorOptionsScope,
 } from '@/modules/navigator/utils/resolve-navigator-folder-settings';
-import type { NavigatorFolderSettings } from '@/types/user-settings';
+import type {
+  NavigatorFolderSettings,
+  UserSettingsNavigator,
+} from '@/types/user-settings';
+
+export function resolveActiveWorkGroupNavigatorDefaults(
+  path: string,
+): NavigatorFolderSettings | null {
+  const userWorkGroupsStore = useUserWorkGroupsStore();
+  const activeWorkGroup = userWorkGroupsStore.activeWorkGroup;
+
+  if (!activeWorkGroup?.navigatorDefaults) {
+    return null;
+  }
+
+  if (!isPathUnderMemberFolders(path, activeWorkGroup.memberPaths)) {
+    return null;
+  }
+
+  return activeWorkGroup.navigatorDefaults;
+}
+
+export function resolveNavigatorFolderSettingsForPath(
+  navigator: UserSettingsNavigator,
+  path: string,
+): NavigatorFolderSettings {
+  return resolveNavigatorFolderSettings(
+    navigator,
+    path,
+    resolveActiveWorkGroupNavigatorDefaults(path),
+  );
+}
 
 export function useNavigatorFolderSettings(
   getActivePath: () => string | undefined,
   getCanUseFolderSettings: () => boolean = () => true,
 ) {
   const userSettingsStore = useUserSettingsStore();
-  const userWorkGroupsStore = useUserWorkGroupsStore();
 
   const activePath = computed(() => getActivePath() ?? '');
   const canUseFolderSettings = computed(() => (
     Boolean(getCanUseFolderSettings() && activePath.value)
   ));
 
-  function resolveGroupDefaultsForPath(path: string): NavigatorFolderSettings | null {
-    const activeWorkGroup = userWorkGroupsStore.activeWorkGroup;
-
-    if (!activeWorkGroup?.navigatorDefaults) {
-      return null;
-    }
-
-    if (!isPathUnderMemberFolders(path, activeWorkGroup.memberPaths)) {
-      return null;
-    }
-
-    return activeWorkGroup.navigatorDefaults;
-  }
-
-  const applied = computed(() => resolveNavigatorFolderSettings(
+  const applied = computed(() => resolveNavigatorFolderSettingsForPath(
     userSettingsStore.userSettings.navigator,
     activePath.value,
-    resolveGroupDefaultsForPath(activePath.value),
   ));
   const globalSnapshot = computed(() => (
     createNavigatorFolderSettingsSnapshot(userSettingsStore.userSettings.navigator)
@@ -60,11 +75,9 @@ export function useNavigatorFolderSettings(
   ));
 
   function resolveForPath(path: string | undefined) {
-    const resolvedPath = path ?? '';
-    return resolveNavigatorFolderSettings(
+    return resolveNavigatorFolderSettingsForPath(
       userSettingsStore.userSettings.navigator,
-      resolvedPath,
-      resolveGroupDefaultsForPath(resolvedPath),
+      path ?? '',
     );
   }
 

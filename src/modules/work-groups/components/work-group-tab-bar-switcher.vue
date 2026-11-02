@@ -6,6 +6,7 @@ Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { ChevronDownIcon, LayersIcon } from '@lucide/vue';
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ import { useWorkGroupActivation } from '@/modules/work-groups/composables/use-wo
 import WorkGroupSwitchSaveDialog from '@/modules/work-groups/components/work-group-switch-save-dialog.vue';
 
 const { t } = useI18n();
+const router = useRouter();
 const userWorkGroupsStore = useUserWorkGroupsStore();
 const {
   switchPromptOpen,
@@ -59,7 +61,13 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
         >
           <span class="work-group-tab-bar-switcher__item-name">{{ workGroup.name }}</span>
           <span
-            v-if="workGroup.isDefault"
+            v-if="userWorkGroupsStore.activeWorkGroup?.id === workGroup.id"
+            class="work-group-tab-bar-switcher__badge work-group-tab-bar-switcher__badge--active"
+          >
+            {{ t('workGroups.active') }}
+          </span>
+          <span
+            v-else-if="workGroup.isDefault"
             class="work-group-tab-bar-switcher__badge"
           >
             {{ t('workGroups.defaultBadge') }}
@@ -71,6 +79,9 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
         </DropdownMenuItem>
         <DropdownMenuItem @select="userWorkGroupsStore.closeMemberTabs()">
           {{ t('workGroups.closeMemberTabs') }}
+        </DropdownMenuItem>
+        <DropdownMenuItem @select="router.push({ name: 'work-groups' })">
+          {{ t('pages.work-groups') }}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -117,5 +128,9 @@ const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t
   margin-left: 8px;
   color: hsl(var(--muted-foreground));
   font-size: 11px;
+}
+
+.work-group-tab-bar-switcher__badge--active {
+  color: hsl(var(--primary));
 }
 </style>

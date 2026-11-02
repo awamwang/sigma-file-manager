@@ -161,13 +161,32 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       return false;
     }
 
-    applyWorkGroupsRecord(getStartupStorageRecord(bootstrapFile));
+    const bootstrapRecord = getStartupStorageRecord(bootstrapFile);
+
+    // Mirror workspaces: "missing" is a valid fast path, but there is no record to apply.
+    // Fall through to LazyStore load so we never skip a real on-disk file due to bootstrap skew.
+    if (!bootstrapRecord) {
+      return false;
+    }
+
+    applyWorkGroupsRecord(bootstrapRecord);
     await migrateFromWorkspacesIfNeeded();
     return true;
   }
 
   function getWorkGroupById(id: string): WorkGroup | null {
     return userWorkGroups.value.workGroups.find(workGroup => workGroup.id === id) ?? null;
+  }
+
+  function replaceWorkGroup(id: string, nextWorkGroup: WorkGroup): boolean {
+    const index = userWorkGroups.value.workGroups.findIndex(workGroup => workGroup.id === id);
+
+    if (index === -1) {
+      return false;
+    }
+
+    userWorkGroups.value.workGroups.splice(index, 1, nextWorkGroup);
+    return true;
   }
 
   function isOpenStateDirty(): boolean {
@@ -188,7 +207,10 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       return;
     }
 
-    workGroup.openState = cloneOpenState(openState);
+    replaceWorkGroup(workGroupId, {
+      ...workGroup,
+      openState: cloneOpenState(openState),
+    });
     await saveWorkGroups();
   }
 
@@ -232,11 +254,14 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     const workGroup = getWorkGroupById(id);
     const trimmed = name.trim();
 
-    if (!workGroup || !trimmed) {
+    if (!workGroup || !trimmed || workGroup.name === trimmed) {
       return;
     }
 
-    workGroup.name = trimmed;
+    replaceWorkGroup(id, {
+      ...workGroup,
+      name: trimmed,
+    });
     await saveWorkGroups();
   }
 
@@ -277,7 +302,10 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       return;
     }
 
-    workGroup.navigatorDefaults = navigatorDefaults ? clone(navigatorDefaults) : null;
+    replaceWorkGroup(id, {
+      ...workGroup,
+      navigatorDefaults: navigatorDefaults ? clone(navigatorDefaults) : null,
+    });
     await saveWorkGroups();
   }
 
@@ -293,7 +321,10 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       return;
     }
 
-    workGroup.memberPaths.push(path);
+    replaceWorkGroup(workGroupId, {
+      ...workGroup,
+      memberPaths: [...workGroup.memberPaths, path],
+    });
     await saveWorkGroups();
   }
 
@@ -312,7 +343,10 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       return;
     }
 
-    workGroup.memberPaths = nextMembers;
+    replaceWorkGroup(workGroupId, {
+      ...workGroup,
+      memberPaths: nextMembers,
+    });
     await saveWorkGroups();
   }
 
@@ -333,22 +367,36 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
   async function setMemberPathsForPath(path: string, workGroupIds: string[]) {
     const selectedIds = new Set(workGroupIds);
+    let hasChanges = false;
 
-    for (const workGroup of userWorkGroups.value.workGroups) {
+    userWorkGroups.value.workGroups = userWorkGroups.value.workGroups.map((workGroup) => {
       const isMember = isExactMemberPath(path, workGroup.memberPaths);
       const shouldBeMember = selectedIds.has(workGroup.id);
 
       if (shouldBeMember && !isMember) {
-        workGroup.memberPaths.push(path);
+        hasChanges = true;
+        return {
+          ...workGroup,
+          memberPaths: [...workGroup.memberPaths, path],
+        };
       }
-      else if (!shouldBeMember && isMember) {
-        workGroup.memberPaths = workGroup.memberPaths.filter(
-          memberPath => !isExactMemberPath(path, [memberPath]),
-        );
-      }
-    }
 
-    await saveWorkGroups();
+      if (!shouldBeMember && isMember) {
+        hasChanges = true;
+        return {
+          ...workGroup,
+          memberPaths: workGroup.memberPaths.filter(
+            memberPath => !isExactMemberPath(path, [memberPath]),
+          ),
+        };
+      }
+
+      return workGroup;
+    });
+
+    if (hasChanges) {
+      await saveWorkGroups();
+    }
   }
 
   async function activateWorkGroup(targetId: string, saveMode?: ActivateWorkGroupSaveMode) {
@@ -377,9 +425,16 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       });
     }
 
-    userWorkGroups.value.activeWorkGroupId = target.id;
+    // Re-read target after optional create (array may have changed).
+    const resolvedTarget = getWorkGroupById(targetId);
+
+    if (!resolvedTarget) {
+      return false;
+    }
+
+    userWorkGroups.value.activeWorkGroupId = resolvedTarget.id;
     await saveWorkGroups();
-    await workspacesStore.applyOpenStateSnapshot(target.openState);
+    await workspacesStore.applyOpenStateSnapshot(resolvedTarget.openState);
     return true;
   }
 
@@ -448,18 +503,29 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
   async function handlePathRenamed(oldPath: string, newPath: string) {
     let hasChanges = false;
 
-    for (const workGroup of userWorkGroups.value.workGroups) {
-      workGroup.memberPaths = workGroup.memberPaths.map((memberPath) => {
+    userWorkGroups.value.workGroups = userWorkGroups.value.workGroups.map((workGroup) => {
+      let workGroupChanged = false;
+      const nextMembers = workGroup.memberPaths.map((memberPath) => {
         const updated = replacePathPrefix(memberPath, oldPath, newPath);
 
         if (updated !== null) {
-          hasChanges = true;
+          workGroupChanged = true;
           return updated;
         }
 
         return memberPath;
       });
-    }
+
+      if (!workGroupChanged) {
+        return workGroup;
+      }
+
+      hasChanges = true;
+      return {
+        ...workGroup,
+        memberPaths: nextMembers,
+      };
+    });
 
     if (hasChanges) {
       await saveWorkGroups();
@@ -472,7 +538,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       .filter(Boolean);
     let hasChanges = false;
 
-    for (const workGroup of userWorkGroups.value.workGroups) {
+    userWorkGroups.value.workGroups = userWorkGroups.value.workGroups.map((workGroup) => {
       const nextMembers = workGroup.memberPaths.filter((memberPath) => {
         const comparableMemberPath = normalizePathForComparison(memberPath);
         return !deletedPrefixes.some(deletedPath => (
@@ -481,11 +547,16 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
         ));
       });
 
-      if (nextMembers.length !== workGroup.memberPaths.length) {
-        workGroup.memberPaths = nextMembers;
-        hasChanges = true;
+      if (nextMembers.length === workGroup.memberPaths.length) {
+        return workGroup;
       }
-    }
+
+      hasChanges = true;
+      return {
+        ...workGroup,
+        memberPaths: nextMembers,
+      };
+    });
 
     if (hasChanges) {
       await saveWorkGroups();

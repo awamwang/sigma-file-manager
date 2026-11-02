@@ -48,7 +48,7 @@ import {
   getNavigatorSortSettingsForLayout,
   type NavigatorSortSource,
 } from '@/modules/navigator/components/file-browser/utils/file-browser-sort-columns';
-import { resolveNavigatorFolderSettings } from '@/modules/navigator/utils/resolve-navigator-folder-settings';
+import { resolveNavigatorFolderSettingsForPath } from '@/modules/navigator/composables/use-navigator-folder-settings';
 
 function createNavigatorSortSettingsComputed(
   getSource: () => NavigatorSortSource,
@@ -132,7 +132,7 @@ function setupNavigationDataSource(
     isActivePane: options.isActivePane,
   });
 
-  const appliedFolderSettings = computed(() => resolveNavigatorFolderSettings(
+  const appliedFolderSettings = computed(() => resolveNavigatorFolderSettingsForPath(
     userSettingsStore.userSettings.navigator,
     navigation.currentPath.value,
   ));

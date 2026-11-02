@@ -38,7 +38,7 @@ import {
 } from '@/utils/virtual-locations';
 import { sharedDrives } from '@/modules/home/composables/use-drives';
 import { getFileBrowserSortReadDirOptions } from '@/modules/navigator/components/file-browser/utils/file-browser-sort-columns';
-import { resolveNavigatorFolderSettings } from '@/modules/navigator/utils/resolve-navigator-folder-settings';
+import { resolveNavigatorFolderSettingsForPath } from '@/modules/navigator/composables/use-navigator-folder-settings';
 import {
   createDefaultDirectoryResolveInput,
   resolveDefaultDirectory,
@@ -178,7 +178,7 @@ export function useFileBrowserNavigation(
   };
 
   function createReadDirOptions(path = currentPath.value): ReadDirOptions {
-    const appliedFolderSettings = resolveNavigatorFolderSettings(
+    const appliedFolderSettings = resolveNavigatorFolderSettingsForPath(
       userSettingsStore.userSettings.navigator,
       path,
     );

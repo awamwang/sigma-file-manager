@@ -22,7 +22,7 @@ import {
 import type { ListSortColumn } from '@/types/user-settings';
 import { getNextNavigatorSortDirection } from '@/modules/navigator/components/file-browser/utils/file-browser-sort-columns';
 import { persistAppliedNavigatorOptions } from '@/modules/navigator/utils/persist-navigator-folder-settings';
-import { resolveNavigatorFolderSettings } from '@/modules/navigator/utils/resolve-navigator-folder-settings';
+import { resolveNavigatorFolderSettingsForPath } from '@/modules/navigator/composables/use-navigator-folder-settings';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ const { visibleOptionalListColumns, visibleListColumnOrderKey } = useFileBrowser
 const headerGridRef = ref<HTMLElement | null>(null);
 let headerResizeObserver: ResizeObserver | null = null;
 
-const appliedFolderSettings = computed(() => resolveNavigatorFolderSettings(
+const appliedFolderSettings = computed(() => resolveNavigatorFolderSettingsForPath(
   userSettingsStore.userSettings.navigator,
   ctx.currentPath.value,
 ));

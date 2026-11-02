@@ -8,7 +8,7 @@ import { useItemCountsStore } from '@/stores/runtime/item-counts';
 import { useUserSettingsStore } from '@/stores/storage/user-settings';
 import type { FileBrowserVirtualRow } from './use-file-browser-virtual-layout';
 import { getNavigatorSortSettingsForLayout } from '@/modules/navigator/components/file-browser/utils/file-browser-sort-columns';
-import { resolveNavigatorFolderSettings } from '@/modules/navigator/utils/resolve-navigator-folder-settings';
+import { resolveNavigatorFolderSettingsForPath } from '@/modules/navigator/composables/use-navigator-folder-settings';
 
 interface UseFileBrowserItemCountsOptions {
   enabled: boolean;
@@ -28,7 +28,7 @@ export function useFileBrowserItemCounts(options: UseFileBrowserItemCountsOption
   const itemCountsStore = useItemCountsStore();
   let hydrationGeneration = 0;
 
-  const appliedFolderSettings = computed(() => resolveNavigatorFolderSettings(
+  const appliedFolderSettings = computed(() => resolveNavigatorFolderSettingsForPath(
     userSettingsStore.userSettings.navigator,
     options.currentPath.value,
   ));
