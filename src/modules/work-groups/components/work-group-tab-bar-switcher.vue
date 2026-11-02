@@ -22,19 +22,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
 import { useWorkGroupActivation } from '@/modules/work-groups/composables/use-work-group-activation';
-import WorkGroupSwitchSaveDialog from '@/modules/work-groups/components/work-group-switch-save-dialog.vue';
 import WorkGroupSaveMembersDialog from '@/modules/work-groups/components/work-group-save-members-dialog.vue';
 
 const { t } = useI18n();
 const router = useRouter();
 const userWorkGroupsStore = useUserWorkGroupsStore();
-const {
-  switchPromptOpen,
-  pendingTargetWorkGroupId,
-  activateWorkGroup,
-  confirmSwitch,
-  cancelSwitch,
-} = useWorkGroupActivation();
+const { activateWorkGroup } = useWorkGroupActivation();
 
 const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t('workGroups.title'));
 const saveMembersDialogOpen = ref(false);
@@ -111,13 +104,6 @@ function requestSaveMembers(workGroupId: string) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-
-    <WorkGroupSwitchSaveDialog
-      v-model:open="switchPromptOpen"
-      :target-work-group-id="pendingTargetWorkGroupId"
-      @confirmed="confirmSwitch"
-      @cancelled="cancelSwitch"
-    />
 
     <WorkGroupSaveMembersDialog
       v-model:open="saveMembersDialogOpen"

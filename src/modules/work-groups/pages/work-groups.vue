@@ -30,20 +30,13 @@ import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
 import { useUserSettingsStore } from '@/stores/storage/user-settings';
 import { createNavigatorFolderSettingsSnapshot } from '@/modules/navigator/utils/resolve-navigator-folder-settings';
 import { useWorkGroupActivation } from '@/modules/work-groups/composables/use-work-group-activation';
-import WorkGroupSwitchSaveDialog from '@/modules/work-groups/components/work-group-switch-save-dialog.vue';
 import type { WorkGroup } from '@/types/user-work-groups';
 import normalizePath from '@/utils/normalize-path';
 
 const { t } = useI18n();
 const userWorkGroupsStore = useUserWorkGroupsStore();
 const userSettingsStore = useUserSettingsStore();
-const {
-  switchPromptOpen,
-  pendingTargetWorkGroupId,
-  activateWorkGroup,
-  confirmSwitch,
-  cancelSwitch,
-} = useWorkGroupActivation();
+const { activateWorkGroup } = useWorkGroupActivation();
 
 const selectedWorkGroupId = ref<string | null>(null);
 const renameDraft = ref('');
@@ -350,13 +343,6 @@ if (workGroups.value[0]) {
         </div>
       </section>
     </div>
-
-    <WorkGroupSwitchSaveDialog
-      v-model:open="switchPromptOpen"
-      :target-work-group-id="pendingTargetWorkGroupId"
-      @confirmed="confirmSwitch"
-      @cancelled="cancelSwitch"
-    />
 
     <Dialog v-model:open="deleteDialogOpen">
       <DialogContent>

@@ -31,14 +31,8 @@ import {
   type MemberPathDiff,
   uniqueMemberPaths,
 } from '@/utils/work-group-paths';
-import { diffOpenStatePaths } from '@/utils/work-group-open-state-diff';
 import uniqueId from '@/utils/unique-id';
 import clone from '@/utils/clone';
-
-export type ActivateWorkGroupSaveMode =
-  | { type: 'current'; openUnopenedNewMembers?: boolean }
-  | { type: 'discard' }
-  | { type: 'create'; name: string; openUnopenedNewMembers?: boolean };
 
 function createDefaultWorkGroup(openState: WorkGroupOpenState | null = null): WorkGroup {
   return {
@@ -66,7 +60,6 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
   // When true, the next time Navigator becomes visible we auto-apply pending
   // (edits happened while away). When false, show the Session Align Prompt instead.
   const sessionAlignAutoApplyOnNavigator = ref(false);
-  const sessionAlignSwitchBlocked = ref(false);
 
   const workGroups = computed(() => userWorkGroups.value.workGroups);
 
@@ -81,10 +74,6 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
   function clearSessionAlignPending() {
     sessionAlignPending.value = null;
     sessionAlignAutoApplyOnNavigator.value = false;
-  }
-
-  function setSessionAlignSwitchBlocked(blocked: boolean) {
-    sessionAlignSwitchBlocked.value = blocked;
   }
 
   function isPendingEmpty(pending: WorkGroupSessionAlignPending): boolean {
@@ -251,23 +240,6 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     clearSessionAlignPending();
   }
 
-  function getSwitchOpenStateChurn(targetWorkGroupId: string | null) {
-    const workspacesStore = useWorkspacesStore();
-    const liveOpenState = workspacesStore.captureOpenStateSnapshot();
-    const active = activeWorkGroup.value;
-    const target = targetWorkGroupId ? getWorkGroupById(targetWorkGroupId) : null;
-    const pending = sessionAlignPending.value;
-    const pendingPaths = pending && pending.workGroupId === active?.id
-      ? pending.addedMemberPaths
-      : undefined;
-
-    return {
-      relativeToSaved: diffOpenStatePaths(active?.openState, liveOpenState),
-      relativeToTarget: diffOpenStatePaths(liveOpenState, target?.openState),
-      unopenedNewMemberPaths: listUnopenedMemberPaths(pendingPaths),
-    };
-  }
-
   async function initStorage() {
     try {
       if (!userWorkGroupsStorage.value) {
@@ -384,24 +356,6 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
     userWorkGroups.value.workGroups.splice(index, 1, nextWorkGroup);
     return true;
-  }
-
-  function isOpenStateDirty(): boolean {
-    const active = activeWorkGroup.value;
-
-    if (!active) {
-      return false;
-    }
-
-    // Gate Switch Save Prompt on Active tab-path churn vs saved Open State only.
-    // Pane widths / filters / target-replace cost must not force the prompt.
-    const workspacesStore = useWorkspacesStore();
-    const churn = diffOpenStatePaths(
-      active.openState,
-      workspacesStore.captureOpenStateSnapshot(),
-    );
-
-    return churn.addedCount > 0 || churn.closedCount > 0;
   }
 
   async function writeOpenStateToWorkGroup(workGroupId: string, openState: WorkGroupOpenState) {
@@ -663,7 +617,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     }
   }
 
-  async function activateWorkGroup(targetId: string, saveMode?: ActivateWorkGroupSaveMode) {
+  async function activateWorkGroup(targetId: string) {
     const target = getWorkGroupById(targetId);
 
     if (!target) {
@@ -678,44 +632,17 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     const previousActiveId = userWorkGroups.value.activeWorkGroupId;
     const previousActive = getWorkGroupById(previousActiveId);
     const previousActiveMemberPaths = previousActive ? [...previousActive.memberPaths] : [];
-    const shouldOpenUnopenedNewMembers = (
-      (saveMode?.type === 'current' || saveMode?.type === 'create')
-      && saveMode.openUnopenedNewMembers === true
-    );
-
-    if (shouldOpenUnopenedNewMembers) {
-      const pendingAdded = sessionAlignPending.value?.workGroupId === previousActiveId
-        ? sessionAlignPending.value.addedMemberPaths
-        : undefined;
-      await openUnopenedMemberTabs(pendingAdded);
-    }
-
-    // Capture after optional member-tab opens so saved Open State can include them.
     const liveOpenState = workspacesStore.captureOpenStateSnapshot();
 
-    if (saveMode?.type === 'current') {
-      await writeOpenStateToWorkGroup(previousActiveId, liveOpenState);
-    }
-    else if (saveMode?.type === 'create') {
-      await createWorkGroup({
-        name: saveMode.name,
-        copyFromActive: true,
-        openState: liveOpenState,
-      });
-    }
+    // Leaving always writes Open State back to the group being left — no prompt.
+    await writeOpenStateToWorkGroup(previousActiveId, liveOpenState);
+    clearSessionAlignPending();
 
-    // Re-read target after optional create (array may have changed).
-    const resolvedTarget = getWorkGroupById(targetId);
-
-    if (!resolvedTarget) {
-      return false;
-    }
-
-    userWorkGroups.value.activeWorkGroupId = resolvedTarget.id;
+    userWorkGroups.value.activeWorkGroupId = target.id;
     await saveWorkGroups();
-    await workspacesStore.applyOpenStateSnapshot(resolvedTarget.openState);
+    await workspacesStore.applyOpenStateSnapshot(target.openState);
     // Open members the target has but the previous Active group does not.
-    await alignMembersRelativeToActive(resolvedTarget, previousActiveMemberPaths);
+    await alignMembersRelativeToActive(target, previousActiveMemberPaths);
     return true;
   }
 
@@ -856,10 +783,8 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     isInitialized,
     sessionAlignPending,
     sessionAlignAutoApplyOnNavigator,
-    sessionAlignSwitchBlocked,
     init,
     getWorkGroupById,
-    isOpenStateDirty,
     flushActiveOpenState,
     createWorkGroup,
     renameWorkGroup,
@@ -879,8 +804,6 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     listUnopenedMemberPaths,
     applySessionAlign,
     clearSessionAlignPending,
-    setSessionAlignSwitchBlocked,
-    getSwitchOpenStateChurn,
     handlePathRenamed,
     handlePathsDeleted,
   };

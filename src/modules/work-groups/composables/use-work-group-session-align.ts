@@ -13,7 +13,6 @@ export function useWorkGroupSessionAlign() {
   const {
     sessionAlignPending,
     sessionAlignAutoApplyOnNavigator,
-    sessionAlignSwitchBlocked,
   } = storeToRefs(userWorkGroupsStore);
 
   const promptOpen = ref(false);
@@ -40,7 +39,6 @@ export function useWorkGroupSessionAlign() {
     return Boolean(
       fingerprint
       && isOnNavigator.value
-      && !sessionAlignSwitchBlocked.value
       && !sessionAlignAutoApplyOnNavigator.value
       && fingerprint !== suppressedFingerprint.value,
     );
@@ -51,7 +49,7 @@ export function useWorkGroupSessionAlign() {
   }
 
   async function resumePendingOnNavigator() {
-    if (!isOnNavigator.value || sessionAlignSwitchBlocked.value) {
+    if (!isOnNavigator.value) {
       syncPromptVisibility();
       return;
     }
@@ -113,15 +111,6 @@ export function useWorkGroupSessionAlign() {
     },
     { immediate: true },
   );
-
-  watch(sessionAlignSwitchBlocked, (blocked) => {
-    if (blocked) {
-      promptOpen.value = false;
-      return;
-    }
-
-    void resumePendingOnNavigator();
-  });
 
   async function confirmAlign() {
     await userWorkGroupsStore.applySessionAlign();
