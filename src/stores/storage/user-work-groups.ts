@@ -251,15 +251,15 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     const liveOpenState = workspacesStore.captureOpenStateSnapshot();
     const active = activeWorkGroup.value;
     const target = targetWorkGroupId ? getWorkGroupById(targetWorkGroupId) : null;
+    const pending = sessionAlignPending.value;
+    const pendingPaths = pending && pending.workGroupId === active?.id
+      ? pending.addedMemberPaths
+      : undefined;
 
     return {
       relativeToSaved: diffOpenStatePaths(active?.openState, liveOpenState),
       relativeToTarget: diffOpenStatePaths(liveOpenState, target?.openState),
-      unopenedNewMemberPaths: listUnopenedMemberPaths(
-        sessionAlignPending.value?.workGroupId === active?.id
-          ? sessionAlignPending.value.addedMemberPaths
-          : undefined,
-      ),
+      unopenedNewMemberPaths: listUnopenedMemberPaths(pendingPaths),
     };
   }
 
