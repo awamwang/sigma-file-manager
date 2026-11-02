@@ -20,9 +20,41 @@
     "home": "Գլխավոր էջ",
     "navigator": "Նավիգատոր",
     "dashboard": "Վահանակ",
+    "work-groups": "Work Groups",
     "notes": "Նշումներ",
     "settings": "Կարգավորումներ",
     "extensions": "Ընդլայնումներ"
+  },
+  "workGroups": {
+    "title": "Work Groups",
+    "subtitle": "Group folders, share Navigator defaults, and restore open tabs per group.",
+    "defaultBadge": "Default",
+    "create": "New work group",
+    "rename": "Rename",
+    "delete": "Delete",
+    "open": "Open",
+    "members": "Members",
+    "noMembers": "No member folders yet.",
+    "addMember": "Add folder",
+    "removeMember": "Remove",
+    "navigatorDefaults": "Navigator defaults",
+    "useGlobalDefaults": "Use global defaults",
+    "saveDefaultsFromCurrent": "Save current folder view as group defaults",
+    "openAllMembers": "Open all members",
+    "closeMemberTabs": "Close member tabs",
+    "empty": "No work groups yet.",
+    "deleteConfirmTitle": "Delete work group?",
+    "deleteConfirmDescription": "This removes the work group. Open tabs are not saved to it.",
+    "deleteDiscardAndDelete": "Discard and delete",
+    "cancel": "Cancel",
+    "switchPromptTitle": "Save open tabs before switching?",
+    "switchPromptDescription": "Choose where to save the current Navigator open state, create a new work group, or switch without saving.",
+    "saveToCurrent": "Save to current work group",
+    "createNew": "Create new work group",
+    "newNamePlaceholder": "New work group name",
+    "discardAndSwitch": "Don't save and switch",
+    "confirmSwitch": "Continue",
+    "active": "Active"
   },
   "language": {
     "language": "Լեզու"
@@ -1014,7 +1046,8 @@
       "addToFavorites": "Ավելացնել սիրվածներին",
       "removeFromFavorites": "Ջնջել սիրվածներից",
       "addToProjects": "Ավելացնել նախագծերին",
-      "removeFromProjects": "Ջնջել նախագծերից"
+      "removeFromProjects": "Ջնջել նախագծերից",
+      "addToWorkGroup": "Add to Work Group…"
     },
     "linkTypes": {
       "symlink": "Սիմվոլիկ հղում",

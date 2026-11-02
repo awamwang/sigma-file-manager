@@ -20,9 +20,41 @@
     "home": "主页",
     "navigator": "导航器",
     "dashboard": "仪表板",
+    "work-groups": "工作组",
     "notes": "笔记",
     "settings": "设置",
     "extensions": "扩展功能"
+  },
+  "workGroups": {
+    "title": "工作组",
+    "subtitle": "将文件夹编组、共享导航器默认设置，并按组还原打开的标签。",
+    "defaultBadge": "默认",
+    "create": "新建工作组",
+    "rename": "重命名",
+    "delete": "删除",
+    "open": "打开",
+    "members": "成员",
+    "noMembers": "还没有成员文件夹。",
+    "addMember": "添加文件夹",
+    "removeMember": "移除",
+    "navigatorDefaults": "导航器默认",
+    "useGlobalDefaults": "使用全局默认",
+    "saveDefaultsFromCurrent": "将当前文件夹视图存为组默认",
+    "openAllMembers": "打开全部成员",
+    "closeMemberTabs": "关闭成员标签",
+    "empty": "还没有工作组。",
+    "deleteConfirmTitle": "删除工作组？",
+    "deleteConfirmDescription": "将移除该工作组，其中的打开标签不会再被保存。",
+    "deleteDiscardAndDelete": "丢弃并删除",
+    "cancel": "取消",
+    "switchPromptTitle": "切换前保存打开的标签？",
+    "switchPromptDescription": "选择将当前导航器打开态保存到哪里，或新建工作组，或不保存直接切换。",
+    "saveToCurrent": "保存到当前工作组",
+    "createNew": "新建工作组",
+    "newNamePlaceholder": "新工作组名称",
+    "discardAndSwitch": "不保存并切换",
+    "confirmSwitch": "继续",
+    "active": "当前"
   },
   "language": {
     "language": "语言"
@@ -981,7 +1013,8 @@
       "removeFromFavorites": "从收藏中移除",
       "createLink": "创建链接",
       "addToProjects": "添加到项目",
-      "removeFromProjects": "从项目中移除"
+      "removeFromProjects": "从项目中移除",
+      "addToWorkGroup": "添加到工作组…"
     },
     "linkTypes": {
       "symlink": "符号链接",
