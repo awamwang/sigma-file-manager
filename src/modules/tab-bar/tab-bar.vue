@@ -22,6 +22,7 @@ import { useHorizontalScrollFade } from '@/composables/use-horizontal-scroll-fad
 import { getScrollLeftToRevealInFadedContainer } from '@/composables/get-scroll-left-to-reveal-in-faded-container';
 import type { Tab as TabType, TabGroup } from '@/types/workspaces';
 import { PlusIcon } from '@lucide/vue';
+import WorkGroupTabBarSwitcher from '@/modules/work-groups/components/work-group-tab-bar-switcher.vue';
 
 const { t } = useI18n();
 
@@ -158,6 +159,7 @@ onBeforeUnmount(() => {
       class="tab-bar animate-sigma-ui-fade-in"
       :class="{ 'tab-bar--compact': compact }"
     >
+      <WorkGroupTabBarSwitcher />
       <div
         ref="scrollContainerRef"
         class="tab-bar__base-container"

@@ -44,6 +44,7 @@ import {
 } from 'vue';
 import FileBrowserNewSubmenu from './file-browser-new-submenu.vue';
 import FileBrowserOpenWithSubmenu from './file-browser-open-with-submenu.vue';
+import FileBrowserAddToWorkGroupSubmenu from './file-browser-add-to-work-group-submenu.vue';
 import FileBrowserMoreOptionsSubmenu from './file-browser-more-options-submenu.vue';
 import FileBrowserArchiveSubmenu from './file-browser-archive-submenu.vue';
 import FileBrowserTerminalSubmenu from './file-browser-terminal-submenu.vue';
@@ -154,6 +155,10 @@ const selectedDirectory = computed(() => {
 
 const hasVirtualLocationSelection = computed(() => {
   return isSelectionVirtualLocation(props.selectedEntries);
+});
+
+const isSingleDirectorySelection = computed(() => {
+  return props.selectedEntries.length === 1 && props.selectedEntries[0].is_dir;
 });
 
 const canPasteToSelectedDirectory = computed(() => {
@@ -359,6 +364,10 @@ function handleCreateLink(linkKind: LinkCreationKind) {
     v-if="isActionVisible('open-with')"
     :selected-entries="selectedEntries"
     @open-custom-dialog="handleOpenCustomDialog"
+  />
+  <FileBrowserAddToWorkGroupSubmenu
+    v-if="isSingleDirectorySelection && !hasVirtualLocationSelection"
+    :selected-entries="selectedEntries"
   />
   <FileBrowserMoreOptionsSubmenu
     v-if="!hasVirtualLocationSelection"

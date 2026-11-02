@@ -13,9 +13,11 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { toggleMainWindowMaximized } from '@/utils/window-fullscreen';
+import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
 
 const { t } = useI18n();
 const appWindow = getCurrentWindow();
+const userWorkGroupsStore = useUserWorkGroupsStore();
 
 function minimizeWindow() {
   appWindow.minimize();
@@ -27,8 +29,15 @@ function maximizeWindow() {
   });
 }
 
-function closeWindow() {
-  appWindow.hide();
+async function closeWindow() {
+  try {
+    await userWorkGroupsStore.flushActiveOpenState();
+  }
+  catch (error) {
+    console.error('Failed to flush active work group open state:', error);
+  }
+
+  await appWindow.hide();
 }
 </script>
 
