@@ -4,7 +4,9 @@
 
 import { computed } from 'vue';
 import { useUserSettingsStore } from '@/stores/storage/user-settings';
+import { useUserWorkGroupsStore } from '@/stores/storage/user-work-groups';
 import { canonicalizePath } from '@/utils/normalize-path';
+import { isPathUnderMemberFolders } from '@/utils/work-group-paths';
 import {
   clearNavigatorFolderSettings,
   persistNavigatorOptions,
@@ -16,20 +18,38 @@ import {
   type NavigatorFolderSettingsPatch,
   type NavigatorOptionsScope,
 } from '@/modules/navigator/utils/resolve-navigator-folder-settings';
+import type { NavigatorFolderSettings } from '@/types/user-settings';
 
 export function useNavigatorFolderSettings(
   getActivePath: () => string | undefined,
   getCanUseFolderSettings: () => boolean = () => true,
 ) {
   const userSettingsStore = useUserSettingsStore();
+  const userWorkGroupsStore = useUserWorkGroupsStore();
 
   const activePath = computed(() => getActivePath() ?? '');
   const canUseFolderSettings = computed(() => (
     Boolean(getCanUseFolderSettings() && activePath.value)
   ));
+
+  function resolveGroupDefaultsForPath(path: string): NavigatorFolderSettings | null {
+    const activeWorkGroup = userWorkGroupsStore.activeWorkGroup;
+
+    if (!activeWorkGroup?.navigatorDefaults) {
+      return null;
+    }
+
+    if (!isPathUnderMemberFolders(path, activeWorkGroup.memberPaths)) {
+      return null;
+    }
+
+    return activeWorkGroup.navigatorDefaults;
+  }
+
   const applied = computed(() => resolveNavigatorFolderSettings(
     userSettingsStore.userSettings.navigator,
     activePath.value,
+    resolveGroupDefaultsForPath(activePath.value),
   ));
   const globalSnapshot = computed(() => (
     createNavigatorFolderSettingsSnapshot(userSettingsStore.userSettings.navigator)
@@ -40,9 +60,11 @@ export function useNavigatorFolderSettings(
   ));
 
   function resolveForPath(path: string | undefined) {
+    const resolvedPath = path ?? '';
     return resolveNavigatorFolderSettings(
       userSettingsStore.userSettings.navigator,
-      path ?? '',
+      resolvedPath,
+      resolveGroupDefaultsForPath(resolvedPath),
     );
   }
 

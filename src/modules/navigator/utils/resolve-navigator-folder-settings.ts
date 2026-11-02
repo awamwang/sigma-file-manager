@@ -97,19 +97,41 @@ export function createNavigatorFolderSettingsSnapshot(
   };
 }
 
+function mergeFolderSettingsWithBase(
+  folderSettings: Record<string, unknown>,
+  baseSnapshot: NavigatorFolderSettings,
+): NavigatorFolderSettings {
+  return {
+    layout: resolveFolderLayoutName(folderSettings.layout, baseSnapshot.layout),
+    listSortColumn: resolveSortColumn(folderSettings.listSortColumn, baseSnapshot.listSortColumn),
+    listSortDirection: resolveSortDirection(folderSettings.listSortDirection, baseSnapshot.listSortDirection),
+    gridSortColumn: resolveSortColumn(folderSettings.gridSortColumn, baseSnapshot.gridSortColumn),
+    gridSortDirection: resolveSortDirection(folderSettings.gridSortDirection, baseSnapshot.gridSortDirection),
+    showHiddenFiles: resolveBoolean(folderSettings.showHiddenFiles, baseSnapshot.showHiddenFiles),
+  };
+}
+
 function mergeFolderSettingsWithGlobal(
   folderSettings: Record<string, unknown>,
   navigator: UserSettingsNavigator,
 ): NavigatorFolderSettings {
-  const globalSnapshot = createNavigatorFolderSettingsSnapshot(navigator);
+  return mergeFolderSettingsWithBase(
+    folderSettings,
+    createNavigatorFolderSettingsSnapshot(navigator),
+  );
+}
+
+export function mergeNavigatorFolderSettingsLayers(
+  globalSnapshot: NavigatorFolderSettings,
+  groupDefaults: NavigatorFolderSettings | null | undefined,
+): NavigatorFolderSettings {
+  if (!groupDefaults) {
+    return globalSnapshot;
+  }
 
   return {
-    layout: resolveFolderLayoutName(folderSettings.layout, globalSnapshot.layout),
-    listSortColumn: resolveSortColumn(folderSettings.listSortColumn, globalSnapshot.listSortColumn),
-    listSortDirection: resolveSortDirection(folderSettings.listSortDirection, globalSnapshot.listSortDirection),
-    gridSortColumn: resolveSortColumn(folderSettings.gridSortColumn, globalSnapshot.gridSortColumn),
-    gridSortDirection: resolveSortDirection(folderSettings.gridSortDirection, globalSnapshot.gridSortDirection),
-    showHiddenFiles: resolveBoolean(folderSettings.showHiddenFiles, globalSnapshot.showHiddenFiles),
+    ...globalSnapshot,
+    ...groupDefaults,
   };
 }
 
@@ -178,14 +200,19 @@ export function hasNavigatorFolderSettings(
 export function resolveNavigatorFolderSettings(
   navigator: UserSettingsNavigator,
   path: string,
+  groupDefaults?: NavigatorFolderSettings | null,
 ): NavigatorFolderSettings {
+  const baseSnapshot = mergeNavigatorFolderSettingsLayers(
+    createNavigatorFolderSettingsSnapshot(navigator),
+    groupDefaults,
+  );
   const storedSettings = lookupStoredNavigatorFolderSettings(navigator, path);
 
   if (!storedSettings) {
-    return createNavigatorFolderSettingsSnapshot(navigator);
+    return baseSnapshot;
   }
 
-  return mergeFolderSettingsWithGlobal(storedSettings, navigator);
+  return mergeFolderSettingsWithBase(storedSettings, baseSnapshot);
 }
 
 export function createNavigatorFolderSettingsWriteSnapshot(
