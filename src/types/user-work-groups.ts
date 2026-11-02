@@ -35,12 +35,6 @@ export type UserWorkGroups = {
   activeWorkGroupId: string;
 };
 
-export type WorkGroupAlignedBaseline = {
-  workGroupId: string;
-  memberPaths: string[];
-  navigatorDefaults: NavigatorFolderSettings | null;
-};
-
 export type WorkGroupSessionAlignPending = {
   workGroupId: string;
   addedMemberPaths: string[];

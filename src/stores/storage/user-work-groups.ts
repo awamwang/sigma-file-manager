@@ -10,7 +10,6 @@ import { useWorkspacesStore } from './workspaces';
 import type {
   UserWorkGroups,
   WorkGroup,
-  WorkGroupAlignedBaseline,
   WorkGroupOpenState,
   WorkGroupSessionAlignPending,
 } from '@/types/user-work-groups';
@@ -63,7 +62,8 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
   const userWorkGroupsStorage = ref<LazyStore | null>(null);
   const userWorkGroups = ref<UserWorkGroups>(structuredClone(DEFAULT_USER_WORK_GROUPS));
   const isInitialized = ref(false);
-  const alignedBaselines = ref<Record<string, WorkGroupAlignedBaseline>>({});
+  // Active-only mutation delta for Session Align Prompt. No per-group historical baseline:
+  // the goal is keeping the Active session in sync with definition writes.
   const sessionAlignPending = ref<WorkGroupSessionAlignPending | null>(null);
 
   const workGroups = computed(() => userWorkGroups.value.workGroups);
@@ -76,96 +76,117 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     ?? null
   ));
 
-  function captureAlignedBaseline(workGroup: WorkGroup | null = activeWorkGroup.value) {
-    if (!workGroup) {
-      sessionAlignPending.value = null;
-      return;
-    }
-
-    alignedBaselines.value = {
-      ...alignedBaselines.value,
-      [workGroup.id]: {
-        workGroupId: workGroup.id,
-        memberPaths: [...workGroup.memberPaths],
-        navigatorDefaults: workGroup.navigatorDefaults ? clone(workGroup.navigatorDefaults) : null,
-      },
-    };
-
-    if (workGroup.id === userWorkGroups.value.activeWorkGroupId) {
-      sessionAlignPending.value = null;
-    }
-  }
-
-  function captureAlignedBaselinesForAll() {
-    const nextBaselines: Record<string, WorkGroupAlignedBaseline> = {};
-
-    for (const workGroup of userWorkGroups.value.workGroups) {
-      nextBaselines[workGroup.id] = {
-        workGroupId: workGroup.id,
-        memberPaths: [...workGroup.memberPaths],
-        navigatorDefaults: workGroup.navigatorDefaults ? clone(workGroup.navigatorDefaults) : null,
-      };
-    }
-
-    alignedBaselines.value = nextBaselines;
+  function clearSessionAlignPending() {
     sessionAlignPending.value = null;
   }
 
-  function computeSessionAlignPendingFor(
-    workGroup: WorkGroup | null,
-  ): WorkGroupSessionAlignPending | null {
-    if (!workGroup) {
-      return null;
-    }
-
-    const baseline = alignedBaselines.value[workGroup.id];
-
-    if (!baseline) {
-      return null;
-    }
-
-    const addedMemberPaths = workGroup.memberPaths.filter(
-      path => !isExactMemberPath(path, baseline.memberPaths),
-    );
-    const removedMemberPaths = baseline.memberPaths.filter(
-      path => !isExactMemberPath(path, workGroup.memberPaths),
-    );
-    const defaultsChanged = JSON.stringify(workGroup.navigatorDefaults)
-      !== JSON.stringify(baseline.navigatorDefaults);
-
-    if (addedMemberPaths.length === 0 && removedMemberPaths.length === 0 && !defaultsChanged) {
-      return null;
-    }
-
-    return {
-      workGroupId: workGroup.id,
-      addedMemberPaths,
-      removedMemberPaths,
-      defaultsChanged,
-    };
+  function isPendingEmpty(pending: WorkGroupSessionAlignPending): boolean {
+    return pending.addedMemberPaths.length === 0
+      && pending.removedMemberPaths.length === 0
+      && !pending.defaultsChanged;
   }
 
-  function recomputeSessionAlignPending() {
-    sessionAlignPending.value = computeSessionAlignPendingFor(activeWorkGroup.value);
-  }
-
-  function noteDefinitionChanged(workGroupId: string) {
+  function ensureActiveSessionAlignPending(workGroupId: string): WorkGroupSessionAlignPending | null {
     if (workGroupId !== userWorkGroups.value.activeWorkGroupId) {
-      // Inactive groups keep their old baseline so activation can auto-align later.
+      return null;
+    }
+
+    if (
+      !sessionAlignPending.value
+      || sessionAlignPending.value.workGroupId !== workGroupId
+    ) {
+      sessionAlignPending.value = {
+        workGroupId,
+        addedMemberPaths: [],
+        removedMemberPaths: [],
+        defaultsChanged: false,
+      };
+    }
+
+    return sessionAlignPending.value;
+  }
+
+  function noteActiveMemberAdded(workGroupId: string, path: string) {
+    const pending = ensureActiveSessionAlignPending(workGroupId);
+
+    if (!pending) {
       return;
     }
 
-    recomputeSessionAlignPending();
+    const nextPending: WorkGroupSessionAlignPending = {
+      workGroupId: pending.workGroupId,
+      addedMemberPaths: isExactMemberPath(path, pending.addedMemberPaths)
+        ? [...pending.addedMemberPaths]
+        : [...pending.addedMemberPaths, path],
+      removedMemberPaths: pending.removedMemberPaths.filter(
+        memberPath => !isExactMemberPath(path, [memberPath]),
+      ),
+      defaultsChanged: pending.defaultsChanged,
+    };
+
+    sessionAlignPending.value = isPendingEmpty(nextPending) ? null : nextPending;
   }
 
-  async function applyPendingSessionAlign(workGroup: WorkGroup) {
-    const pending = computeSessionAlignPendingFor(workGroup);
+  function noteActiveMemberRemoved(workGroupId: string, path: string) {
+    const pending = ensureActiveSessionAlignPending(workGroupId);
 
-    if (pending?.addedMemberPaths.length) {
-      await openUnopenedMemberTabs(pending.addedMemberPaths);
+    if (!pending) {
+      return;
     }
 
-    captureAlignedBaseline(workGroup);
+    const nextPending: WorkGroupSessionAlignPending = {
+      workGroupId: pending.workGroupId,
+      addedMemberPaths: pending.addedMemberPaths.filter(
+        memberPath => !isExactMemberPath(path, [memberPath]),
+      ),
+      removedMemberPaths: isExactMemberPath(path, pending.removedMemberPaths)
+        ? [...pending.removedMemberPaths]
+        : [...pending.removedMemberPaths, path],
+      defaultsChanged: pending.defaultsChanged,
+    };
+
+    sessionAlignPending.value = isPendingEmpty(nextPending) ? null : nextPending;
+  }
+
+  function noteActiveDefaultsChanged(workGroupId: string) {
+    const pending = ensureActiveSessionAlignPending(workGroupId);
+
+    if (!pending) {
+      return;
+    }
+
+    sessionAlignPending.value = {
+      ...pending,
+      defaultsChanged: true,
+    };
+  }
+
+  function listMemberPathsNotInReference(
+    memberPaths: string[],
+    referenceMemberPaths: string[] | null | undefined,
+  ): string[] {
+    if (!referenceMemberPaths) {
+      return [...memberPaths];
+    }
+
+    return memberPaths.filter(path => !isExactMemberPath(path, referenceMemberPaths));
+  }
+
+  // On activation: open members that the target has but the previous Active group does not.
+  async function alignMembersRelativeToActive(
+    workGroup: WorkGroup,
+    activeReferenceMemberPaths: string[] | null | undefined,
+  ) {
+    const membersToOpen = listMemberPathsNotInReference(
+      workGroup.memberPaths,
+      activeReferenceMemberPaths,
+    );
+
+    if (membersToOpen.length > 0) {
+      await openUnopenedMemberTabs(membersToOpen);
+    }
+
+    clearSessionAlignPending();
   }
 
   function listUnopenedMemberPaths(memberPaths?: string[]): string[] {
@@ -201,16 +222,12 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     const active = activeWorkGroup.value;
 
     if (!pending || !active || pending.workGroupId !== active.id) {
-      captureAlignedBaseline(active);
+      clearSessionAlignPending();
       return;
     }
 
     await openUnopenedMemberTabs(pending.addedMemberPaths);
-    captureAlignedBaseline(active);
-  }
-
-  function clearSessionAlignPending() {
-    sessionAlignPending.value = null;
+    clearSessionAlignPending();
   }
 
   function getSwitchOpenStateChurn(targetWorkGroupId: string | null) {
@@ -406,7 +423,6 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
     userWorkGroups.value.workGroups.push(newWorkGroup);
     await saveWorkGroups();
-    captureAlignedBaseline(newWorkGroup);
     return newWorkGroup;
   }
 
@@ -433,14 +449,10 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     }
 
     const wasActive = userWorkGroups.value.activeWorkGroupId === id;
+    const deletedMemberPaths = [...workGroup.memberPaths];
     userWorkGroups.value.workGroups = userWorkGroups.value.workGroups.filter(
       candidate => candidate.id !== id,
     );
-
-    if (alignedBaselines.value[id]) {
-      const { [id]: _removed, ...remainingBaselines } = alignedBaselines.value;
-      alignedBaselines.value = remainingBaselines;
-    }
 
     if (wasActive) {
       const defaultGroup = userWorkGroups.value.workGroups.find(candidate => candidate.isDefault)
@@ -450,12 +462,14 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
         userWorkGroups.value.activeWorkGroupId = defaultGroup.id;
         const workspacesStore = useWorkspacesStore();
         await workspacesStore.applyOpenStateSnapshot(defaultGroup.openState);
-        await applyPendingSessionAlign(defaultGroup);
+        await alignMembersRelativeToActive(defaultGroup, deletedMemberPaths);
+      }
+      else {
+        clearSessionAlignPending();
       }
     }
 
     await saveWorkGroups();
-    recomputeSessionAlignPending();
     return true;
   }
 
@@ -474,7 +488,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       navigatorDefaults: navigatorDefaults ? clone(navigatorDefaults) : null,
     });
     await saveWorkGroups();
-    noteDefinitionChanged(id);
+    noteActiveDefaultsChanged(id);
   }
 
   async function addMemberPath(workGroupId: string, path: string) {
@@ -494,7 +508,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       memberPaths: [...workGroup.memberPaths, path],
     });
     await saveWorkGroups();
-    noteDefinitionChanged(workGroupId);
+    noteActiveMemberAdded(workGroupId, path);
   }
 
   async function removeMemberPath(workGroupId: string, path: string) {
@@ -517,7 +531,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       memberPaths: nextMembers,
     });
     await saveWorkGroups();
-    noteDefinitionChanged(workGroupId);
+    noteActiveMemberRemoved(workGroupId, path);
   }
 
   async function toggleMemberPath(workGroupId: string, path: string) {
@@ -537,14 +551,15 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
   async function setMemberPathsForPath(path: string, workGroupIds: string[]) {
     const selectedIds = new Set(workGroupIds);
-    const changedWorkGroupIds = new Set<string>();
+    const addedToWorkGroupIds: string[] = [];
+    const removedFromWorkGroupIds: string[] = [];
 
     userWorkGroups.value.workGroups = userWorkGroups.value.workGroups.map((workGroup) => {
       const isMember = isExactMemberPath(path, workGroup.memberPaths);
       const shouldBeMember = selectedIds.has(workGroup.id);
 
       if (shouldBeMember && !isMember) {
-        changedWorkGroupIds.add(workGroup.id);
+        addedToWorkGroupIds.push(workGroup.id);
         return {
           ...workGroup,
           memberPaths: [...workGroup.memberPaths, path],
@@ -552,7 +567,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       }
 
       if (!shouldBeMember && isMember) {
-        changedWorkGroupIds.add(workGroup.id);
+        removedFromWorkGroupIds.push(workGroup.id);
         return {
           ...workGroup,
           memberPaths: workGroup.memberPaths.filter(
@@ -564,10 +579,13 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       return workGroup;
     });
 
-    if (changedWorkGroupIds.size > 0) {
+    if (addedToWorkGroupIds.length > 0 || removedFromWorkGroupIds.length > 0) {
       await saveWorkGroups();
-      for (const workGroupId of changedWorkGroupIds) {
-        noteDefinitionChanged(workGroupId);
+      for (const workGroupId of addedToWorkGroupIds) {
+        noteActiveMemberAdded(workGroupId, path);
+      }
+      for (const workGroupId of removedFromWorkGroupIds) {
+        noteActiveMemberRemoved(workGroupId, path);
       }
     }
   }
@@ -585,6 +603,8 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
     const workspacesStore = useWorkspacesStore();
     const previousActiveId = userWorkGroups.value.activeWorkGroupId;
+    const previousActive = getWorkGroupById(previousActiveId);
+    const previousActiveMemberPaths = previousActive ? [...previousActive.memberPaths] : [];
     const shouldOpenUnopenedNewMembers = (
       (saveMode?.type === 'current' || saveMode?.type === 'create')
       && saveMode.openUnopenedNewMembers === true
@@ -621,9 +641,8 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     userWorkGroups.value.activeWorkGroupId = resolvedTarget.id;
     await saveWorkGroups();
     await workspacesStore.applyOpenStateSnapshot(resolvedTarget.openState);
-    // Apply membership/defaults that changed while this group was inactive.
-    await applyPendingSessionAlign(resolvedTarget);
-    recomputeSessionAlignPending();
+    // Open members the target has but the previous Active group does not.
+    await alignMembersRelativeToActive(resolvedTarget, previousActiveMemberPaths);
     return true;
   }
 
@@ -718,20 +737,19 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
 
     if (hasChanges) {
       await saveWorkGroups();
-      // Renames update membership paths; refresh every baseline without prompting.
-      const nextBaselines: Record<string, WorkGroupAlignedBaseline> = {};
 
-      for (const [workGroupId, baseline] of Object.entries(alignedBaselines.value)) {
-        nextBaselines[workGroupId] = {
-          ...baseline,
-          memberPaths: baseline.memberPaths.map(memberPath => (
+      // Keep Active pending paths in sync with renames; do not raise a new align prompt.
+      if (sessionAlignPending.value) {
+        sessionAlignPending.value = {
+          ...sessionAlignPending.value,
+          addedMemberPaths: sessionAlignPending.value.addedMemberPaths.map(memberPath => (
+            replacePathPrefix(memberPath, oldPath, newPath) ?? memberPath
+          )),
+          removedMemberPaths: sessionAlignPending.value.removedMemberPaths.map(memberPath => (
             replacePathPrefix(memberPath, oldPath, newPath) ?? memberPath
           )),
         };
       }
-
-      alignedBaselines.value = nextBaselines;
-      recomputeSessionAlignPending();
     }
   }
 
@@ -750,7 +768,7 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
       await loadWorkGroups();
     }
 
-    captureAlignedBaselinesForAll();
+    clearSessionAlignPending();
     isInitialized.value = true;
   }
 
@@ -779,7 +797,6 @@ export const useUserWorkGroupsStore = defineStore('userWorkGroups', () => {
     listUnopenedMemberPaths,
     applySessionAlign,
     clearSessionAlignPending,
-    captureAlignedBaseline,
     getSwitchOpenStateChurn,
     handlePathRenamed,
     handlePathsDeleted,
