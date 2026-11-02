@@ -44,6 +44,7 @@ import {
 } from 'vue';
 import FileBrowserNewSubmenu from './file-browser-new-submenu.vue';
 import FileBrowserOpenWithSubmenu from './file-browser-open-with-submenu.vue';
+import FileBrowserOpenProjectSubmenu from './file-browser-open-project-submenu.vue';
 import FileBrowserAddToWorkGroupSubmenu from './file-browser-add-to-work-group-submenu.vue';
 import FileBrowserMoreOptionsSubmenu from './file-browser-more-options-submenu.vue';
 import FileBrowserArchiveSubmenu from './file-browser-archive-submenu.vue';
@@ -364,6 +365,10 @@ function handleCreateLink(linkKind: LinkCreationKind) {
     v-if="isActionVisible('open-with')"
     :selected-entries="selectedEntries"
     @open-custom-dialog="handleOpenCustomDialog"
+  />
+  <FileBrowserOpenProjectSubmenu
+    v-if="isSingleDirectorySelection && !hasVirtualLocationSelection"
+    :selected-entries="selectedEntries"
   />
   <FileBrowserAddToWorkGroupSubmenu
     v-if="isSingleDirectorySelection && !hasVirtualLocationSelection"

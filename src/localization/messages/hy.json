@@ -1142,6 +1142,14 @@
     "noCustomCommands": "Դեռևս հատուկ հրամաններ չկան: Ավելացրեք հատուկ հրաման՝ որոշակի դրոշներով ֆայլեր բացելու համար:",
     "detectedPrograms": "Հայտնաբերված ծրագրեր"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "Տարներակների բեռնում...",
     "shellExtensions": "Shell ընդլայնումներ",

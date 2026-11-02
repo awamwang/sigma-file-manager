@@ -1107,6 +1107,14 @@
     "noCustomCommands": "هنوز دستور سفارشی وجود ندارد. برای باز کردن فایل‌ها با پرچم‌های خاص، دستور سفارشی اضافه کنید.",
     "detectedPrograms": "برنامه‌های شناسایی‌شده"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "در حال بارگذاری گزینه‌ها...",
     "shellExtensions": "افزونه‌های شل",

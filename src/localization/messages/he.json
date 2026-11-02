@@ -1142,6 +1142,14 @@
     "noCustomCommands": "אין עדיין פקודות מותאמות אישית. הוסף פקודה מותאמת אישית כדי לפתוח קבצים עם דגלים ספציפיים.",
     "detectedPrograms": "תוכניות שזוהו"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "טוען אפשרויות...",
     "shellExtensions": "תוספי מעטפת",

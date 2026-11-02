@@ -1111,6 +1111,14 @@
     "noCustomCommands": "Noch keine benutzerdefinierten Befehle. Fügen Sie einen Befehl hinzu, um Dateien mit bestimmten Flags zu öffnen.",
     "detectedPrograms": "Erkannte Programme"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "Optionen werden geladen...",
     "shellExtensions": "Shell-Erweiterungen",

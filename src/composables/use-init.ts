@@ -19,6 +19,7 @@ import {
 } from '@/stores/runtime/shortcuts';
 import { useGlobalShortcutsStore } from '@/stores/runtime/global-shortcuts';
 import { useTerminalsStore } from '@/stores/runtime/terminals';
+import { useProjectLaunchersStore } from '@/stores/runtime/project-launchers';
 import { useBackgroundMediaStore } from '@/stores/runtime/background-media';
 import { disableWebViewFeatures } from '@/utils/disable-web-view-features';
 import { useChangelog } from '@/modules/changelog';
@@ -78,6 +79,7 @@ export function useInit() {
   const shortcutsStore = useShortcutsStore();
   const globalShortcutsStore = useGlobalShortcutsStore();
   const terminalsStore = useTerminalsStore();
+  const projectLaunchersStore = useProjectLaunchersStore();
   const backgroundMediaStore = useBackgroundMediaStore();
   const extensionsStore = useExtensionsStore();
   const archiveJobsStore = useArchiveJobsStore();
@@ -475,6 +477,11 @@ export function useInit() {
       'background:terminals.init',
       () => terminalsStore.init(),
       'Failed to initialize terminals:',
+    );
+    runInBackgroundWithTrace(
+      'background:projectLaunchers.init',
+      () => projectLaunchersStore.init(),
+      'Failed to initialize project launchers:',
     );
     runInBackgroundWithTrace(
       'background:extensions.init',

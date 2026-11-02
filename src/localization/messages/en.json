@@ -1142,6 +1142,14 @@
     "noCustomCommands": "No custom commands yet. Add a custom command to open files with specific flags.",
     "detectedPrograms": "Detected programs"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "Loading options...",
     "shellExtensions": "Shell extensions",

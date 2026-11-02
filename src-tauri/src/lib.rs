@@ -25,6 +25,7 @@ mod link_operations;
 mod main_window_state;
 mod open_with;
 mod process_runner;
+mod project_launcher;
 mod startup_storage_bootstrap;
 mod system_clipboard;
 mod system_icons;
@@ -428,6 +429,8 @@ pub fn run() {
             terminal::get_available_terminals,
             terminal::get_terminal_icons,
             terminal::open_terminal,
+            project_launcher::get_available_project_launchers,
+            project_launcher::open_project_with_launcher,
             dir_watcher::watch_directory,
             dir_watcher::unwatch_directory,
             dir_watcher::get_watched_directories,

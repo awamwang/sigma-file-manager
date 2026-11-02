@@ -1142,6 +1142,14 @@
     "noCustomCommands": "ابھی کوئی کسٹم کمانڈ نہیں۔ فلیگز کے ساتھ کھولنے کے لیے شامل کریں۔",
     "detectedPrograms": "پائے گئے پروگرامز"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "لوڈ ہو رہا ہے…",
     "shellExtensions": "شیل ایکسٹینشنز",

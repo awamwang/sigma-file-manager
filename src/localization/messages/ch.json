@@ -1111,6 +1111,14 @@
     "noCustomCommands": "暂无自定义命令。添加自定义命令以使用特定参数打开文件。",
     "detectedPrograms": "检测到的程序"
   },
+  "openProject": {
+    "title": "打开项目",
+    "loading": "正在检测工具...",
+    "editors": "代码编辑器",
+    "agents": "Agent 工具",
+    "noLaunchers": "未检测到代码编辑器或 Agent 工具",
+    "failedToDetect": "检测已安装的工具失败"
+  },
   "moreOptions": {
     "loading": "正在加载选项...",
     "shellExtensions": "Shell 扩展",

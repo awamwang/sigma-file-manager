@@ -1142,6 +1142,14 @@
     "noCustomCommands": "Še ni ukazov po meri. Dodajte ukaz po meri za odpiranje datotek s posebnimi zastavicami.",
     "detectedPrograms": "Zaznani programi"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "Nalagam možnosti...",
     "shellExtensions": "Razširitve lupine",

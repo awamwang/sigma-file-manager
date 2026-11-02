@@ -24,6 +24,7 @@ const {
   invokeMock,
   openOrFocusTabGroupMock,
   platformInitMock,
+  projectLaunchersInitMock,
   quickViewEnsureMainWindowDisplayedPathListenerMock,
   removeAppSplashMock,
   resolveLaunchTargetsFromArgsMock,
@@ -62,6 +63,7 @@ const {
   invokeMock: vi.fn(),
   openOrFocusTabGroupMock: vi.fn(),
   platformInitMock: vi.fn(),
+  projectLaunchersInitMock: vi.fn(),
   quickViewEnsureMainWindowDisplayedPathListenerMock: vi.fn(),
   removeAppSplashMock: vi.fn(),
   resolveLaunchTargetsFromArgsMock: vi.fn(),
@@ -257,6 +259,12 @@ vi.mock('@/stores/runtime/terminals', () => ({
   }),
 }));
 
+vi.mock('@/stores/runtime/project-launchers', () => ({
+  useProjectLaunchersStore: () => ({
+    init: projectLaunchersInitMock,
+  }),
+}));
+
 vi.mock('@/stores/runtime/background-media', () => ({
   useBackgroundMediaStore: () => ({
     refreshCustomBackgrounds: backgroundMediaRefreshCustomBackgroundsMock,
@@ -386,6 +394,7 @@ describe('useInit startup restoration', () => {
     invokeMock.mockReset();
     openOrFocusTabGroupMock.mockReset().mockResolvedValue(undefined);
     platformInitMock.mockReset().mockResolvedValue(undefined);
+    projectLaunchersInitMock.mockReset().mockResolvedValue(undefined);
     quickViewEnsureMainWindowDisplayedPathListenerMock.mockReset().mockResolvedValue(undefined);
     removeAppSplashMock.mockReset();
     resolveLaunchTargetsFromArgsMock.mockReset().mockResolvedValue([]);

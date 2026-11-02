@@ -1111,6 +1111,14 @@
     "noCustomCommands": "カスタムコマンドがありません。特定のフラグでファイルを開くためのカスタムコマンドを追加してください。",
     "detectedPrograms": "検出されたプログラム"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "オプションを読み込み中...",
     "shellExtensions": "シェル拡張機能",

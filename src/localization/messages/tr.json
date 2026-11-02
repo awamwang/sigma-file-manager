@@ -1111,6 +1111,14 @@
     "noCustomCommands": "Henüz özel komut yok. Dosyaları belirli bayraklarla açmak için özel komut ekleyin.",
     "detectedPrograms": "Algılanan programlar"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "Seçenekler yükleniyor...",
     "shellExtensions": "Kabuk uzantıları",

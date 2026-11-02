@@ -1111,6 +1111,14 @@
     "noCustomCommands": "Nessun comando personalizzato. Aggiungi un comando personalizzato per aprire file con flag specifiche.",
     "detectedPrograms": "Programmi rilevati"
   },
+  "openProject": {
+    "title": "Open project",
+    "loading": "Detecting tools...",
+    "editors": "Code editors",
+    "agents": "Agent tools",
+    "noLaunchers": "No code editors or agent tools detected",
+    "failedToDetect": "Failed to detect installed tools"
+  },
   "moreOptions": {
     "loading": "Caricamento opzioni...",
     "shellExtensions": "Estensioni della shell",
