@@ -41,15 +41,15 @@ A Member Folder whose directory path no longer exists on disk. The management pa
 _Avoid_: orphan path, broken shortcut, auto-prune
 
 **Open All Members**:
-An action that ensures each Member Folder of a chosen Work Group has a Navigator tab (focus existing, otherwise open). Available as a per-group submenu item in the tab-bar Work Group switcher; operates on the live Navigator session, not saved Open State.
+An action that ensures each Member Folder of the Active Work Group has a Navigator tab (focus existing, otherwise open). Available in the Active group’s submenu in the tab-bar Work Group switcher; operates on the live Navigator session, not saved Open State.
 _Avoid_: open Work Group, restore Open State
 
 **Close Member Tabs**:
-An action that closes Navigator tabs whose path exactly equals a Member Folder of a chosen Work Group (descendant paths are left alone). Available as a per-group submenu item in the tab-bar Work Group switcher; operates on the live Navigator session, not saved Open State.
+An action that closes Navigator tabs whose path exactly equals a Member Folder of the Active Work Group (descendant paths are left alone). Available in the Active group’s submenu in the tab-bar Work Group switcher; operates on the live Navigator session, not saved Open State.
 _Avoid_: close Work Group, clear Open State
 
 **Save Members From Tabs**:
-An action that replaces a chosen Work Group’s Member Folders with the unique exact paths of the current Navigator tabs (full replace, not merge). A confirmation dialog shows added and removed member paths before writing. Writes the definition only; does not change Open State or auto-close tabs. When the target is Active, no Session Align Prompt is raised for that write.
+An action labeled with the Active Work Group’s name (e.g. “Save as {Active name} config”) that replaces that group’s Member Folders with the unique exact paths of the current Navigator tabs (full replace, not merge). Shown as a top-level item in the tab-bar Work Group switcher. A confirmation dialog shows added and removed member paths before writing. Writes the definition only; does not change Open State or auto-close tabs. No Session Align Prompt is raised for that write.
 _Avoid_: save Open State, sync tabs, export members
 
 **Workspace**:

@@ -29,11 +29,22 @@ const router = useRouter();
 const userWorkGroupsStore = useUserWorkGroupsStore();
 const { activateWorkGroup } = useWorkGroupActivation();
 
-const activeName = computed(() => userWorkGroupsStore.activeWorkGroup?.name ?? t('workGroups.title'));
+const activeWorkGroup = computed(() => userWorkGroupsStore.activeWorkGroup);
+const activeName = computed(() => activeWorkGroup.value?.name ?? t('workGroups.title'));
+const inactiveWorkGroups = computed(() => (
+  userWorkGroupsStore.workGroups.filter(workGroup => workGroup.id !== activeWorkGroup.value?.id)
+));
+
 const saveMembersDialogOpen = ref(false);
 const saveMembersWorkGroupId = ref<string | null>(null);
 
-function requestSaveMembers(workGroupId: string) {
+function requestSaveMembersForActive() {
+  const workGroupId = activeWorkGroup.value?.id;
+
+  if (!workGroupId) {
+    return;
+  }
+
   saveMembersWorkGroupId.value = workGroupId;
   saveMembersDialogOpen.value = true;
 }
@@ -58,49 +69,56 @@ function requestSaveMembers(workGroupId: string) {
         class="work-group-tab-bar-switcher__menu"
       >
         <DropdownMenuLabel>{{ t('workGroups.title') }}</DropdownMenuLabel>
-        <DropdownMenuSub
-          v-for="workGroup in userWorkGroupsStore.workGroups"
-          :key="workGroup.id"
-        >
+
+        <DropdownMenuSub v-if="activeWorkGroup">
           <DropdownMenuSubTrigger
-            class="work-group-tab-bar-switcher__sub-trigger"
-            :class="{
-              'work-group-tab-bar-switcher__sub-trigger--active':
-                userWorkGroupsStore.activeWorkGroup?.id === workGroup.id,
-            }"
+            class="work-group-tab-bar-switcher__sub-trigger work-group-tab-bar-switcher__sub-trigger--active"
           >
-            <span class="work-group-tab-bar-switcher__item-name">{{ workGroup.name }}</span>
+            <span class="work-group-tab-bar-switcher__item-name">{{ activeWorkGroup.name }}</span>
             <span
-              v-if="workGroup.isDefault"
+              v-if="activeWorkGroup.isDefault"
               class="work-group-tab-bar-switcher__badge"
             >
               {{ t('workGroups.defaultBadge') }}
             </span>
-            <span
-              v-if="userWorkGroupsStore.activeWorkGroup?.id === workGroup.id"
-              class="work-group-tab-bar-switcher__badge work-group-tab-bar-switcher__badge--active"
-            >
+            <span class="work-group-tab-bar-switcher__badge work-group-tab-bar-switcher__badge--active">
               {{ t('workGroups.active') }}
             </span>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent class="work-group-tab-bar-switcher__sub-menu">
-            <DropdownMenuItem @select="activateWorkGroup(workGroup.id)">
-              {{ t('workGroups.open') }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @select="requestSaveMembers(workGroup.id)">
-              {{ t('workGroups.saveAsMembersConfig', { name: workGroup.name }) }}
-            </DropdownMenuItem>
-            <DropdownMenuItem @select="userWorkGroupsStore.openAllMembers(workGroup.id)">
+            <DropdownMenuItem @select="userWorkGroupsStore.openAllMembers(activeWorkGroup.id)">
               {{ t('workGroups.openAllMembers') }}
             </DropdownMenuItem>
-            <DropdownMenuItem @select="userWorkGroupsStore.closeMemberTabs(workGroup.id)">
+            <DropdownMenuItem @select="userWorkGroupsStore.closeMemberTabs(activeWorkGroup.id)">
               {{ t('workGroups.closeMemberTabs') }}
             </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+
+        <DropdownMenuItem
+          v-for="workGroup in inactiveWorkGroups"
+          :key="workGroup.id"
+          class="work-group-tab-bar-switcher__item"
+          @select="activateWorkGroup(workGroup.id)"
+        >
+          <span class="work-group-tab-bar-switcher__item-name">{{ workGroup.name }}</span>
+          <span
+            v-if="workGroup.isDefault"
+            class="work-group-tab-bar-switcher__badge"
+          >
+            {{ t('workGroups.defaultBadge') }}
+          </span>
+        </DropdownMenuItem>
+
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          :disabled="!activeWorkGroup"
+          @select="requestSaveMembersForActive"
+        >
+          {{ t('workGroups.saveAsMembersConfig', { name: activeName }) }}
+        </DropdownMenuItem>
         <DropdownMenuItem @select="router.push({ name: 'work-groups' })">
-          {{ t('pages.work-groups') }}
+          {{ t('workGroups.goToConfig') }}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -134,14 +152,15 @@ function requestSaveMembers(workGroupId: string) {
 }
 
 .work-group-tab-bar-switcher__menu {
-  min-width: 220px;
+  min-width: 240px;
 }
 
 .work-group-tab-bar-switcher__sub-menu {
-  min-width: 220px;
+  min-width: 200px;
 }
 
-.work-group-tab-bar-switcher__sub-trigger {
+.work-group-tab-bar-switcher__sub-trigger,
+.work-group-tab-bar-switcher__item {
   gap: 6px;
 }
 

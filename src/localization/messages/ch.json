@@ -42,6 +42,7 @@
     "saveDefaultsFromCurrent": "将当前文件夹视图存为组默认",
     "openAllMembers": "打开本组全部成员",
     "closeMemberTabs": "关闭本组全部成员",
+    "goToConfig": "跳转工作组配置",
     "saveAsMembersConfig": "保存为{name}配置",
     "saveMembersTitle": "保存为「{name}」成员配置？",
     "saveMembersDescription": "将用当前导航器已打开的标签路径，整表替换「{name}」的成员文件夹列表。",

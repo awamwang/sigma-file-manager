@@ -5,6 +5,7 @@ Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 
 <script setup lang="ts">
 import {
+  DropdownMenuPortal,
   DropdownMenuSubContent,
   type DropdownMenuSubContentEmits,
   type DropdownMenuSubContentProps,
@@ -27,18 +28,20 @@ const forwarded = useForwardPropsEmits(props, emits);
 </script>
 
 <template>
-  <DropdownMenuSubContent
-    v-bind="{ ...forwarded, ...$attrs }"
-    class="sigma-ui-dropdown-menu-sub-content"
-    :class="$attrs.class"
-  >
-    <slot />
-  </DropdownMenuSubContent>
+  <DropdownMenuPortal>
+    <DropdownMenuSubContent
+      v-bind="{ ...forwarded, ...$attrs }"
+      class="sigma-ui-dropdown-menu-sub-content"
+      :class="$attrs.class"
+    >
+      <slot />
+    </DropdownMenuSubContent>
+  </DropdownMenuPortal>
 </template>
 
 <style>
 .sigma-ui-dropdown-menu-sub-content {
-  z-index: 50;
+  z-index: 60;
   overflow: hidden;
   min-width: 8rem;
   padding: 0.25rem;

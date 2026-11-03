@@ -63,7 +63,8 @@
     "sessionAlignApply": "Apply changes",
     "sessionAlignLater": "Not now",
     "missingMembersBanner": "{count} member folder(s) are missing on disk.",
-    "missingMemberBadge": "Path missing"
+    "missingMemberBadge": "Path missing",
+    "goToConfig": "Go to work group settings"
   },
   "language": {
     "language": "Jezik"

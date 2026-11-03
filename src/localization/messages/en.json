@@ -42,6 +42,7 @@
     "saveDefaultsFromCurrent": "Save current folder view as group defaults",
     "openAllMembers": "Open all members of this group",
     "closeMemberTabs": "Close all members of this group",
+    "goToConfig": "Go to work group settings",
     "saveAsMembersConfig": "Save as {name} config",
     "saveMembersTitle": "Save as “{name}” member folders?",
     "saveMembersDescription": "Replace “{name}” member folders with the exact paths of the tabs currently open in Navigator.",
