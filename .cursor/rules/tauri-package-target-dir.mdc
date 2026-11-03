@@ -1,0 +1,28 @@
+---
+description: Keep Tauri/Cargo package artifacts in src-tauri/target (not Cursor sandbox cache)
+alwaysApply: true
+---
+
+# Tauri 打包：产物必须进仓库 target
+
+Cursor Agent Shell 常会注入 `CARGO_TARGET_DIR`，指向 `%LOCALAPPDATA%\Temp\cursor-sandbox-cache\...`，导致安装包/exe 不在本仓库，容易误开旧的 `src-tauri\target\release\sigma-file-manager.exe`。
+
+## 必须
+
+- 执行 `tauri:build` / `tauri:windows:build` / `cargo build --release` 等打包或 release 构建前，先覆盖 target 目录到本仓库：
+
+```powershell
+Remove-Item Env:CARGO_TARGET_DIR -ErrorAction SilentlyContinue
+$env:CARGO_TARGET_DIR = Join-Path (Get-Location) 'src-tauri\target'
+npm run tauri:build
+```
+
+- 打包完成后核对产物路径与时间戳：
+  - `src-tauri\target\release\bundle\nsis\Sigma File Manager_*_x64-setup.exe`
+  - `src-tauri\target\release\sigma-file-manager.exe`
+- 若输出仍落在 `cursor-sandbox-cache`，视为失败：修正环境变量后重打，不要只拷贝 setup 却让用户继续跑旧 release exe。
+
+## 不要
+
+- 不要依赖 Agent 默认的 `CARGO_TARGET_DIR` / 沙箱缓存路径作为发版产物位置。
+- 不要在未确认 hash/时间戳的情况下，假设项目里已有的 `release\sigma-file-manager.exe` 就是刚打的包。
