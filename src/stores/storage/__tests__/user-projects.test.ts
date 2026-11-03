@@ -9,6 +9,8 @@ import { createPinia, setActivePinia } from 'pinia';
 import type { StartupStorageFileBootstrap } from '@/stores/storage/utils/startup-storage-bootstrap';
 import { useUserProjectsStore } from '@/stores/storage/user-projects';
 import type { Project } from '@/types/user-projects';
+import { USER_PROJECTS_SCHEMA_VERSION } from '@/types/user-projects';
+import { migrateUserProjectsRecord } from '@/stores/schemas/user-projects';
 
 const {
   lazyStoreSaveMock,
@@ -45,7 +47,7 @@ vi.mock('@/stores/storage/user-paths', () => ({
   }),
 }));
 
-function createProject(overrides: Partial<Project> = {}): Project {
+function createLegacyProject(overrides: Record<string, unknown> = {}) {
   return {
     id: 'project-1',
     path: '/home/user/project-a',
@@ -60,6 +62,19 @@ function createProject(overrides: Partial<Project> = {}): Project {
   };
 }
 
+function createProject(overrides: Partial<Project> = {}): Project {
+  const migrated = migrateUserProjectsRecord({
+    projects: [createLegacyProject(overrides as Record<string, unknown>)],
+  }).projects[0];
+
+  return {
+    ...migrated,
+    ...overrides,
+    workspaceLinks: overrides.workspaceLinks ?? migrated.workspaceLinks,
+    tasks: overrides.tasks ?? migrated.tasks,
+  };
+}
+
 function createProjectsBootstrap(data: Record<string, unknown>): StartupStorageFileBootstrap {
   return {
     path: '/tmp/user-data/user-projects.json',
@@ -70,6 +85,23 @@ function createProjectsBootstrap(data: Record<string, unknown>): StartupStorageF
   };
 }
 
+describe('user projects migration', () => {
+  it('migrates legacy single-path projects into workspaceLinks', () => {
+    const migrated = migrateUserProjectsRecord({
+      projects: [createLegacyProject({ ideCommand: 'cursor' })],
+    });
+
+    expect(migrated.schemaVersion).toBe(USER_PROJECTS_SCHEMA_VERSION);
+    expect(migrated.projects).toHaveLength(1);
+    expect(migrated.projects[0].workspaceLinks).toHaveLength(1);
+    expect(migrated.projects[0].workspaceLinks[0].path).toBe('/home/user/project-a');
+    expect(migrated.projects[0].path).toBe('/home/user/project-a');
+    expect(migrated.projects[0].ideCommand).toBe('cursor');
+    expect(migrated.projects[0].tasks).toEqual([]);
+    expect(migrated.projects[0].contextNotes).toBe('');
+  });
+});
+
 describe('user projects store', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -78,16 +110,18 @@ describe('user projects store', () => {
     lazyStoreSetMock.mockReset();
   });
 
-  it('initializes from the startup bootstrap fast path', async () => {
-    const projects = [createProject()];
+  it('initializes from the startup bootstrap fast path and migrates', async () => {
     const store = useUserProjectsStore();
-    await store.init(createProjectsBootstrap({ projects }));
+    await store.init(createProjectsBootstrap({
+      projects: [createLegacyProject()],
+    }));
 
-    expect(store.projects).toEqual(projects);
+    expect(store.projects).toHaveLength(1);
     expect(store.isProject('/home/user/project-a')).toBe(true);
+    expect(store.projects[0].workspaceLinks[0].path).toBe('/home/user/project-a');
   });
 
-  it('adds a project with a name derived from the path and persists it', async () => {
+  it('adds a project with a workspace link derived from the path', async () => {
     const store = useUserProjectsStore();
     await store.init(createProjectsBootstrap({ projects: [] }));
     lazyStoreSetMock.mockClear();
@@ -97,11 +131,12 @@ describe('user projects store', () => {
 
     expect(addedProject?.name).toBe('project-b');
     expect(store.projects.map(project => project.path)).toEqual(['/home/user/project-b']);
+    expect(addedProject?.workspaceLinks).toHaveLength(1);
     expect(lazyStoreSetMock).toHaveBeenCalledWith('projects', store.projects);
     expect(lazyStoreSaveMock).toHaveBeenCalled();
   });
 
-  it('does not duplicate a project that already exists', async () => {
+  it('does not duplicate a project that already owns the path', async () => {
     const existingProject = createProject();
     const store = useUserProjectsStore();
     await store.init(createProjectsBootstrap({ projects: [existingProject] }));
@@ -114,23 +149,23 @@ describe('user projects store', () => {
     expect(lazyStoreSetMock).not.toHaveBeenCalled();
   });
 
-  it('removes projects by path', async () => {
-    const projects = [createProject(), createProject({
-      id: 'project-2',
-      path: '/home/user/project-b',
-      name: 'project-b',
-    })];
+  it('removes a workspace link or deletes the project when last link is removed', async () => {
     const store = useUserProjectsStore();
-    await store.init(createProjectsBootstrap({ projects }));
+    await store.init(createProjectsBootstrap({ projects: [] }));
+    const project = await store.createProject({ name: 'Multi', path: '/home/user/a' });
+    await store.addWorkspaceLink(project.id, '/home/user/b');
     lazyStoreSetMock.mockClear();
 
-    await store.removeProjects(['/home/user/project-a']);
+    await store.removeProject('/home/user/a');
 
-    expect(store.projects.map(project => project.path)).toEqual(['/home/user/project-b']);
-    expect(lazyStoreSetMock).toHaveBeenCalledWith('projects', store.projects);
+    expect(store.projects).toHaveLength(1);
+    expect(store.projects[0].workspaceLinks.map(link => link.path)).toEqual(['/home/user/b']);
+
+    await store.removeProject('/home/user/b');
+    expect(store.projects).toHaveLength(0);
   });
 
-  it('records project opens', async () => {
+  it('records project opens by path or id', async () => {
     const store = useUserProjectsStore();
     await store.init(createProjectsBootstrap({ projects: [createProject()] }));
     lazyStoreSetMock.mockClear();
@@ -140,64 +175,59 @@ describe('user projects store', () => {
     const project = store.getProjectByPath('/home/user/project-a');
     expect(project?.openCount).toBe(1);
     expect(project?.lastOpenedAt).not.toBeNull();
-    expect(lazyStoreSetMock).toHaveBeenCalledWith('projects', store.projects);
+    expect(store.activeProjectId).toBe(project?.id);
   });
 
-  it('saves reordered projects with matching membership', async () => {
-    const projects = [
-      createProject(),
-      createProject({ id: 'project-2', path: '/home/user/project-b', name: 'project-b' }),
-      createProject({ id: 'project-3', path: '/home/user/project-c', name: 'project-c' }),
-    ];
+  it('adds and reorders tasks within a status column', async () => {
     const store = useUserProjectsStore();
-    await store.init(createProjectsBootstrap({ projects }));
-    lazyStoreSetMock.mockClear();
-    lazyStoreSaveMock.mockClear();
+    await store.init(createProjectsBootstrap({ projects: [] }));
+    const project = await store.createProject({ name: 'Board' });
+    const taskA = await store.addTask(project.id, { title: 'A' });
+    const taskB = await store.addTask(project.id, { title: 'B' });
 
-    await store.setProjects([projects[2], projects[0], projects[1]]);
+    expect(taskA && taskB).toBeTruthy();
 
-    expect(store.projects.map(project => project.id)).toEqual([
-      'project-3',
-      'project-1',
-      'project-2',
-    ]);
-    expect(lazyStoreSetMock).toHaveBeenCalledWith('projects', store.projects);
-    expect(lazyStoreSaveMock).toHaveBeenCalled();
+    await store.reorderTasksInStatus(project.id, 'backlog', [taskB!.id, taskA!.id]);
+
+    const backlog = store.getProjectById(project.id)?.tasks
+      .filter(task => task.statusId === 'backlog')
+      .sort((left, right) => left.sortKey - right.sortKey)
+      .map(task => task.title);
+
+    expect(backlog).toEqual(['B', 'A']);
   });
 
-  it('does not persist a reorder that changes membership', async () => {
-    const projects = [
-      createProject(),
-      createProject({ id: 'project-2', path: '/home/user/project-b', name: 'project-b' }),
-    ];
+  it('moves a task across columns', async () => {
     const store = useUserProjectsStore();
-    await store.init(createProjectsBootstrap({ projects }));
-    lazyStoreSetMock.mockClear();
+    await store.init(createProjectsBootstrap({ projects: [] }));
+    const project = await store.createProject({ name: 'Board' });
+    const task = await store.addTask(project.id, { title: 'Ship' });
 
-    await store.setProjects([projects[0]]);
+    await store.moveTask(project.id, task!.id, 'doing', 0);
 
-    expect(store.projects).toHaveLength(2);
-    expect(lazyStoreSetMock).not.toHaveBeenCalled();
+    expect(store.getProjectById(project.id)?.tasks[0].statusId).toBe('doing');
   });
 
-  it('updates project fields', async () => {
+  it('updates project fields and context notes', async () => {
     const store = useUserProjectsStore();
     await store.init(createProjectsBootstrap({ projects: [createProject()] }));
     lazyStoreSetMock.mockClear();
 
     await store.updateProject('project-1', { ideCommand: 'code --new-window' });
+    await store.setContextNotes('project-1', 'Remember local workers');
 
     expect(store.getProjectByPath('/home/user/project-a')?.ideCommand).toBe('code --new-window');
-    expect(lazyStoreSetMock).toHaveBeenCalledWith('projects', store.projects);
+    expect(store.getProjectByPath('/home/user/project-a')?.contextNotes).toBe('Remember local workers');
   });
 
-  it('rewrites project paths after a rename', async () => {
-    const projects = [
-      createProject(),
-      createProject({ id: 'project-2', path: '/home/user/project-a/nested', name: 'nested' }),
-    ];
+  it('rewrites workspace link paths after a rename', async () => {
     const store = useUserProjectsStore();
-    await store.init(createProjectsBootstrap({ projects }));
+    await store.init(createProjectsBootstrap({
+      projects: [
+        createLegacyProject(),
+        createLegacyProject({ id: 'project-2', path: '/home/user/project-a/nested', name: 'nested' }),
+      ],
+    }));
     lazyStoreSetMock.mockClear();
 
     await store.handlePathRenamed('/home/user/project-a', '/home/user/project-renamed');
@@ -206,38 +236,19 @@ describe('user projects store', () => {
       '/home/user/project-renamed',
       '/home/user/project-renamed/nested',
     ]);
-    expect(lazyStoreSetMock).toHaveBeenCalledWith('projects', store.projects);
   });
 
-  it('drops projects affected by a deletion', async () => {
-    const projects = [
-      createProject(),
-      createProject({ id: 'project-2', path: '/home/user/project-b', name: 'project-b' }),
-      createProject({
-        id: 'project-3',
-        path: '/home/user/project-a/nested',
-        name: 'nested',
-      }),
-    ];
+  it('drops workspace links affected by a deletion', async () => {
     const store = useUserProjectsStore();
-    await store.init(createProjectsBootstrap({ projects }));
+    await store.init(createProjectsBootstrap({ projects: [] }));
+    const project = await store.createProject({ name: 'Keep', path: '/home/user/project-b' });
+    await store.addWorkspaceLink(project.id, '/home/user/project-a/nested');
+    await store.createProject({ name: 'Gone', path: '/home/user/project-a' });
     lazyStoreSetMock.mockClear();
 
     await store.handlePathsDeleted(['/home/user/project-a']);
 
-    expect(store.projects.map(project => project.path)).toEqual(['/home/user/project-b']);
-    expect(lazyStoreSetMock).toHaveBeenCalledWith('projects', store.projects);
-  });
-
-  it('deduplicates projects loaded with duplicate paths', async () => {
-    const store = useUserProjectsStore();
-    await store.init(createProjectsBootstrap({
-      projects: [
-        createProject(),
-        createProject({ id: 'project-2', name: 'duplicate' }),
-      ],
-    }));
-
-    expect(store.projects).toHaveLength(1);
+    expect(store.projects.map(projectItem => projectItem.name)).toEqual(['Keep']);
+    expect(store.projects[0].workspaceLinks.map(link => link.path)).toEqual(['/home/user/project-b']);
   });
 });

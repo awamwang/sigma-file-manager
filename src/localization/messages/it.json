@@ -23,7 +23,8 @@
     "work-groups": "Work Groups",
     "notes": "Note",
     "settings": "Impostazioni",
-    "extensions": "Estensioni"
+    "extensions": "Estensioni",
+    "projects": "Projects"
   },
   "workGroups": {
     "title": "Work Groups",
@@ -269,7 +270,8 @@
       "name": "Nome",
       "dateAdded": "Data di aggiunta",
       "path": "Percorso"
-    }
+    },
+    "openProjectBoard": "Open project"
   },
   "settingsCategories": {
     "navigation": "Navigazione"
@@ -1024,7 +1026,8 @@
       "createLink": "Crea collegamento",
       "addToProjects": "Aggiungi ai progetti",
       "removeFromProjects": "Rimuovi dai progetti",
-      "addToWorkGroup": "Add to Work Group…"
+      "addToWorkGroup": "Add to Work Group…",
+      "attachToProject": "Attach to Project…"
     },
     "linkTypes": {
       "symlink": "Collegamento simbolico",
@@ -1375,5 +1378,57 @@
     "replaceShareDialogTitle": "Sostituire la condivisione attuale?",
     "replaceShareDialogDescription": "Ci sono già file condivisi in rete. La condivisione attuale verrà interrotta e sostituita con quella nuova.",
     "replaceShareDialogConfirm": "Sostituisci"
+  },
+  "projectsPage": {
+    "title": "Projects",
+    "subtitle": "Coordinate folders for one product domain, keep durable outcomes on a list or board, and store long-lived context notes.",
+    "create": "New project",
+    "untitled": "New project",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "empty": "No projects yet.",
+    "listMeta": "{links} links · {tasks} open",
+    "descriptionPlaceholder": "One-line description of this product or domain",
+    "workspaceLinks": "Workspace links",
+    "addLink": "Add folder",
+    "removeLink": "Remove",
+    "noLinks": "No folder links yet. Add the repos or folders this project coordinates.",
+    "missingLinksBanner": "{count} linked folder(s) are missing on disk.",
+    "missingLinkBadge": "Path missing",
+    "primaryLink": "Primary",
+    "openAllLinks": "Open all links",
+    "contextNotes": "Context",
+    "contextNotesPlaceholder": "Long-lived facts, preferences, and decisions for this project…",
+    "viewList": "List",
+    "viewBoard": "Board",
+    "tasks": "Outcomes",
+    "addTask": "Add outcome",
+    "editTask": "Edit outcome",
+    "deleteTask": "Delete outcome",
+    "saveTask": "Save",
+    "emptyTasks": "No outcomes yet. Add the first durable result this project should track.",
+    "taskDialogDescription": "Track a durable outcome such as a PR, doc, or decision.",
+    "taskTitle": "Title",
+    "taskBody": "Notes",
+    "taskStatus": "Status",
+    "taskWorkspaceLink": "Workspace link",
+    "taskWorkspaceLinkNone": "None",
+    "taskOutcomeUrl": "Outcome URL",
+    "outcomeLink": "Open link",
+    "deleteConfirmTitle": "Delete project?",
+    "deleteConfirmDescription": "This removes the project, its board, and context notes. Files on disk are not deleted.",
+    "deleteConfirmAction": "Delete project",
+    "createFromFolder": "Create new project from this folder",
+    "attachedToProject": "Attached to “{name}”",
+    "detachedFromProject": "Removed from “{name}”",
+    "createdFromFolder": "Created project “{name}”",
+    "attachFailed": "Could not attach folder",
+    "attachFailedDescription": "That folder may already belong to another project.",
+    "status": {
+      "backlog": "Backlog",
+      "doing": "Doing",
+      "review": "Review",
+      "done": "Done"
+    }
   }
 }

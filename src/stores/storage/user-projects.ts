@@ -6,8 +6,23 @@ import { defineStore } from 'pinia';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { ref, computed } from 'vue';
 import { useUserPathsStore } from './user-paths';
-import type { Project, UserProjects } from '@/types/user-projects';
-import { DEFAULT_USER_PROJECTS } from '@/types/user-projects';
+import type {
+  Project,
+  ProjectTask,
+  ProjectTaskStatusId,
+  ProjectTasksViewMode,
+  ProjectWorkspaceLink,
+  UserProjects,
+} from '@/types/user-projects';
+import {
+  DEFAULT_USER_PROJECTS,
+  USER_PROJECTS_SCHEMA_VERSION,
+  getProjectPrimaryPath,
+} from '@/types/user-projects';
+import {
+  migrateUserProjectsRecord,
+  USER_PROJECTS_SCHEMA_VERSION_KEY,
+} from '@/stores/schemas/user-projects';
 import {
   canUseStartupStorageFastPath,
   getStartupStorageFile,
@@ -16,6 +31,58 @@ import {
 } from './utils/startup-storage-bootstrap';
 import { basenameFromPath } from '@/utils/source-display-name';
 import { haveSameKeyOrder, haveSameKeys } from '@/utils/reorder-matching-items';
+import uniqueId from '@/utils/unique-id';
+import normalizePath from '@/utils/normalize-path';
+
+function createWorkspaceLink(path: string, options?: { label?: string; addedAt?: number }): ProjectWorkspaceLink {
+  const normalizedPath = normalizePath(path);
+
+  return {
+    id: uniqueId(),
+    path: normalizedPath,
+    label: options?.label?.trim() || basenameFromPath(normalizedPath),
+    kind: 'folder',
+    addedAt: options?.addedAt ?? Date.now(),
+  };
+}
+
+function createEmptyProject(options?: {
+  name?: string;
+  path?: string;
+  description?: string;
+}): Project {
+  const now = Date.now();
+  const workspaceLinks = options?.path ? [createWorkspaceLink(options.path, { addedAt: now })] : [];
+  const primaryPath = workspaceLinks[0]?.path ?? '';
+
+  return {
+    id: uniqueId(),
+    name: options?.name?.trim() || (primaryPath ? basenameFromPath(primaryPath) : 'New project'),
+    description: options?.description?.trim() ?? '',
+    workspaceLinks,
+    tasks: [],
+    contextNotes: '',
+    path: primaryPath,
+    tagIds: [],
+    ideCommand: null,
+    terminalProfile: null,
+    addedAt: now,
+    lastOpenedAt: null,
+    openCount: 0,
+    createdAt: now,
+    updatedAt: now,
+    tasksViewMode: 'list',
+  };
+}
+
+function syncPrimaryPath(project: Project) {
+  project.path = getProjectPrimaryPath(project);
+  project.updatedAt = Date.now();
+}
+
+function pathsEqual(pathA: string, pathB: string): boolean {
+  return normalizePath(pathA) === normalizePath(pathB);
+}
 
 export const useUserProjectsStore = defineStore('userProjects', () => {
   const userPathsStore = useUserPathsStore();
@@ -23,6 +90,11 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
   const userProjects = ref<UserProjects>(structuredClone(DEFAULT_USER_PROJECTS));
 
   const projects = computed(() => userProjects.value.projects);
+  const activeProjectId = computed(() => userProjects.value.activeProjectId);
+  const activeProject = computed(() => (
+    userProjects.value.projects.find(project => project.id === userProjects.value.activeProjectId)
+    ?? null
+  ));
 
   async function initStorage() {
     try {
@@ -37,15 +109,7 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
   }
 
   function applyProjectsRecord(projectsRecord: Record<string, unknown> | null) {
-    if (!projectsRecord) {
-      return;
-    }
-
-    for (const [key, value] of Object.entries(projectsRecord)) {
-      if (key in userProjects.value) {
-        (userProjects.value as Record<string, unknown>)[key] = value;
-      }
-    }
+    userProjects.value = migrateUserProjectsRecord(projectsRecord);
   }
 
   async function loadProjects() {
@@ -54,6 +118,7 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
 
       applyProjectsRecord(storedProjects ? Object.fromEntries(storedProjects) : null);
       await deduplicateProjects();
+      await persistIfNeeded();
     }
     catch (error) {
       console.error('Failed to load user projects:', error);
@@ -71,26 +136,31 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
   }
 
   async function deduplicateProjects() {
-    const seenPaths = new Set<string>();
+    const seenPrimaryPaths = new Set<string>();
     const deduplicatedProjects: Project[] = [];
 
     for (const project of userProjects.value.projects) {
-      if (!seenPaths.has(project.path)) {
-        seenPaths.add(project.path);
+      const primaryPath = getProjectPrimaryPath(project);
+      const dedupeKey = primaryPath || project.id;
+
+      if (!seenPrimaryPaths.has(dedupeKey)) {
+        seenPrimaryPaths.add(dedupeKey);
         deduplicatedProjects.push(project);
       }
     }
 
     if (deduplicatedProjects.length !== userProjects.value.projects.length) {
       userProjects.value.projects = deduplicatedProjects;
-      await saveProjects();
     }
   }
 
   async function saveProjects() {
     try {
       if (userProjectsStorage.value) {
+        userProjects.value.schemaVersion = USER_PROJECTS_SCHEMA_VERSION;
+        await userProjectsStorage.value.set(USER_PROJECTS_SCHEMA_VERSION_KEY, USER_PROJECTS_SCHEMA_VERSION);
         await userProjectsStorage.value.set('projects', userProjects.value.projects);
+        await userProjectsStorage.value.set('activeProjectId', userProjects.value.activeProjectId);
         await userProjectsStorage.value.save();
       }
     }
@@ -99,71 +169,118 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     }
   }
 
+  async function persistIfNeeded() {
+    await saveProjects();
+  }
+
+  function getProjectById(id: string): Project | null {
+    return userProjects.value.projects.find(project => project.id === id) ?? null;
+  }
+
+  function findProjectByWorkspacePath(path: string): Project | null {
+    const normalized = normalizePath(path);
+
+    return userProjects.value.projects.find(project => (
+      project.workspaceLinks.some(link => pathsEqual(link.path, normalized))
+      || pathsEqual(project.path, normalized)
+    )) ?? null;
+  }
+
   function isProject(path: string): boolean {
-    return userProjects.value.projects.some(project => project.path === path);
+    return findProjectByWorkspacePath(path) !== null;
   }
 
   function getProjectByPath(path: string): Project | null {
-    return userProjects.value.projects.find(project => project.path === path) ?? null;
+    return findProjectByWorkspacePath(path);
   }
 
   function getProjectsByPaths(paths: string[]): Project[] {
-    const pathSet = new Set(paths);
+    const matched = new Map<string, Project>();
 
-    return userProjects.value.projects.filter(project => pathSet.has(project.path));
+    for (const path of paths) {
+      const project = findProjectByWorkspacePath(path);
+      if (project) {
+        matched.set(project.id, project);
+      }
+    }
+
+    return Array.from(matched.values());
+  }
+
+  async function createProject(options?: {
+    name?: string;
+    path?: string;
+    description?: string;
+  }): Promise<Project> {
+    if (options?.path) {
+      const existing = findProjectByWorkspacePath(options.path);
+      if (existing) {
+        return existing;
+      }
+    }
+
+    const project = createEmptyProject(options);
+    userProjects.value.projects.push(project);
+    userProjects.value.activeProjectId = project.id;
+    await saveProjects();
+    return project;
   }
 
   async function addProject(path: string, options?: { name?: string }): Promise<Project | null> {
-    const existingProject = getProjectByPath(path);
+    return createProject({ path, name: options?.name });
+  }
 
-    if (existingProject) {
-      return existingProject;
+  async function removeProjectById(id: string) {
+    const nextProjects = userProjects.value.projects.filter(project => project.id !== id);
+
+    if (nextProjects.length === userProjects.value.projects.length) {
+      return;
     }
 
-    const newProject: Project = {
-      id: `project-${Date.now()}`,
-      path,
-      name: options?.name ?? basenameFromPath(path),
-      tagIds: [],
-      ideCommand: null,
-      terminalProfile: null,
-      addedAt: Date.now(),
-      lastOpenedAt: null,
-      openCount: 0,
-    };
+    userProjects.value.projects = nextProjects;
 
-    userProjects.value.projects.push(newProject);
+    if (userProjects.value.activeProjectId === id) {
+      userProjects.value.activeProjectId = nextProjects[0]?.id ?? null;
+    }
+
     await saveProjects();
-    return newProject;
   }
 
   async function removeProject(path: string) {
-    const projectIndex = userProjects.value.projects.findIndex(project => project.path === path);
+    const project = findProjectByWorkspacePath(path);
 
-    if (projectIndex !== -1) {
-      userProjects.value.projects.splice(projectIndex, 1);
-      await saveProjects();
+    if (!project) {
+      return;
     }
+
+    const normalized = normalizePath(path);
+    const remainingLinks = project.workspaceLinks.filter(link => !pathsEqual(link.path, normalized));
+
+    if (remainingLinks.length === 0 || pathsEqual(project.path, normalized) && project.workspaceLinks.length <= 1) {
+      await removeProjectById(project.id);
+      return;
+    }
+
+    project.workspaceLinks = remainingLinks;
+    syncPrimaryPath(project);
+    await saveProjects();
   }
 
   async function removeProjects(paths: string[]) {
-    const pathSet = new Set(paths);
-    const nextProjects = userProjects.value.projects.filter(project => !pathSet.has(project.path));
-
-    if (nextProjects.length !== userProjects.value.projects.length) {
-      userProjects.value.projects = nextProjects;
-      await saveProjects();
+    for (const path of paths) {
+      await removeProject(path);
     }
   }
 
-  async function updateProject(id: string, patch: Partial<Omit<Project, 'id'>>) {
-    const project = userProjects.value.projects.find(projectItem => projectItem.id === id);
+  async function updateProject(id: string, patch: Partial<Omit<Project, 'id' | 'workspaceLinks' | 'tasks'>>) {
+    const project = getProjectById(id);
 
     if (!project) {
       return;
     }
 
     Object.assign(project, patch);
+    syncPrimaryPath(project);
     await saveProjects();
   }
 
@@ -175,6 +292,27 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     }
 
     await updateProject(id, { name: trimmed });
+  }
+
+  async function setProjectDescription(id: string, description: string) {
+    await updateProject(id, { description: description.trim() });
+  }
+
+  async function setContextNotes(id: string, contextNotes: string) {
+    await updateProject(id, { contextNotes });
+  }
+
+  async function setTasksViewMode(id: string, tasksViewMode: ProjectTasksViewMode) {
+    await updateProject(id, { tasksViewMode });
+  }
+
+  async function setActiveProjectId(id: string | null) {
+    if (id !== null && !getProjectById(id)) {
+      return;
+    }
+
+    userProjects.value.activeProjectId = id;
+    await saveProjects();
   }
 
   async function setProjects(nextProjects: Project[]) {
@@ -198,8 +336,53 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     await saveProjects();
   }
 
-  async function recordProjectOpened(path: string) {
-    const project = getProjectByPath(path);
+  async function addWorkspaceLink(projectId: string, path: string, options?: { label?: string }) {
+    const project = getProjectById(projectId);
+
+    if (!project) {
+      return null;
+    }
+
+    const normalized = normalizePath(path);
+    const existingInProject = project.workspaceLinks.find(link => pathsEqual(link.path, normalized));
+
+    if (existingInProject) {
+      return existingInProject;
+    }
+
+    const existingElsewhere = findProjectByWorkspacePath(normalized);
+
+    if (existingElsewhere && existingElsewhere.id !== projectId) {
+      return null;
+    }
+
+    const link = createWorkspaceLink(normalized, options);
+    project.workspaceLinks.push(link);
+    syncPrimaryPath(project);
+    await saveProjects();
+    return link;
+  }
+
+  async function removeWorkspaceLink(projectId: string, linkId: string) {
+    const project = getProjectById(projectId);
+
+    if (!project) {
+      return;
+    }
+
+    const nextLinks = project.workspaceLinks.filter(link => link.id !== linkId);
+
+    if (nextLinks.length === project.workspaceLinks.length) {
+      return;
+    }
+
+    project.workspaceLinks = nextLinks;
+    syncPrimaryPath(project);
+    await saveProjects();
+  }
+
+  async function recordProjectOpened(pathOrProjectId: string) {
+    const project = getProjectById(pathOrProjectId) ?? findProjectByWorkspacePath(pathOrProjectId);
 
     if (!project) {
       return;
@@ -207,6 +390,8 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
 
     project.lastOpenedAt = Date.now();
     project.openCount += 1;
+    project.updatedAt = Date.now();
+    userProjects.value.activeProjectId = project.id;
     await saveProjects();
   }
 
@@ -216,6 +401,154 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     }
 
     userProjects.value.projects = [];
+    userProjects.value.activeProjectId = null;
+    await saveProjects();
+  }
+
+  function createTaskDraft(
+    project: Project,
+    input: {
+      title: string;
+      body?: string;
+      statusId?: ProjectTaskStatusId;
+      workspaceLinkId?: string | null;
+      outcomeUrl?: string | null;
+    },
+  ): ProjectTask {
+    const now = Date.now();
+    const statusId = input.statusId ?? 'backlog';
+    const sameStatusCount = project.tasks.filter(task => task.statusId === statusId).length;
+
+    return {
+      id: uniqueId(),
+      title: input.title.trim(),
+      body: input.body?.trim() ?? '',
+      statusId,
+      sortKey: sameStatusCount,
+      workspaceLinkId: input.workspaceLinkId ?? null,
+      outcomeUrl: input.outcomeUrl?.trim() || null,
+      createdAt: now,
+      updatedAt: now,
+      completedAt: statusId === 'done' ? now : null,
+    };
+  }
+
+  async function addTask(
+    projectId: string,
+    input: {
+      title: string;
+      body?: string;
+      statusId?: ProjectTaskStatusId;
+      workspaceLinkId?: string | null;
+      outcomeUrl?: string | null;
+    },
+  ): Promise<ProjectTask | null> {
+    const project = getProjectById(projectId);
+    const title = input.title.trim();
+
+    if (!project || !title) {
+      return null;
+    }
+
+    const task = createTaskDraft(project, { ...input, title });
+    project.tasks.push(task);
+    project.updatedAt = Date.now();
+    await saveProjects();
+    return task;
+  }
+
+  async function updateTask(
+    projectId: string,
+    taskId: string,
+    patch: Partial<Omit<ProjectTask, 'id' | 'createdAt'>>,
+  ) {
+    const project = getProjectById(projectId);
+    const task = project?.tasks.find(taskItem => taskItem.id === taskId);
+
+    if (!project || !task) {
+      return;
+    }
+
+    Object.assign(task, patch);
+    task.updatedAt = Date.now();
+
+    if (task.statusId === 'done') {
+      task.completedAt = task.completedAt ?? Date.now();
+    }
+    else {
+      task.completedAt = null;
+    }
+
+    project.updatedAt = Date.now();
+    await saveProjects();
+  }
+
+  async function deleteTask(projectId: string, taskId: string) {
+    const project = getProjectById(projectId);
+
+    if (!project) {
+      return;
+    }
+
+    const nextTasks = project.tasks.filter(task => task.id !== taskId);
+
+    if (nextTasks.length === project.tasks.length) {
+      return;
+    }
+
+    project.tasks = nextTasks;
+    project.updatedAt = Date.now();
+    await saveProjects();
+  }
+
+  async function moveTask(
+    projectId: string,
+    taskId: string,
+    statusId: ProjectTaskStatusId,
+    sortKey: number,
+  ) {
+    const project = getProjectById(projectId);
+    const task = project?.tasks.find(taskItem => taskItem.id === taskId);
+
+    if (!project || !task) {
+      return;
+    }
+
+    task.statusId = statusId;
+    task.sortKey = sortKey;
+    task.updatedAt = Date.now();
+    task.completedAt = statusId === 'done' ? (task.completedAt ?? Date.now()) : null;
+    project.updatedAt = Date.now();
+    await saveProjects();
+  }
+
+  async function reorderTasksInStatus(
+    projectId: string,
+    statusId: ProjectTaskStatusId,
+    orderedTaskIds: string[],
+  ) {
+    const project = getProjectById(projectId);
+
+    if (!project) {
+      return;
+    }
+
+    const taskById = new Map(project.tasks.map(task => [task.id, task]));
+
+    orderedTaskIds.forEach((taskId, index) => {
+      const task = taskById.get(taskId);
+
+      if (!task) {
+        return;
+      }
+
+      task.statusId = statusId;
+      task.sortKey = index;
+      task.updatedAt = Date.now();
+      task.completedAt = statusId === 'done' ? (task.completedAt ?? Date.now()) : null;
+    });
+
+    project.updatedAt = Date.now();
     await saveProjects();
   }
 
@@ -229,10 +562,26 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     let hasChanges = false;
 
     for (const project of userProjects.value.projects) {
-      const updated = replacePathPrefix(project.path, oldPath, newPath);
+      let projectChanged = false;
 
-      if (updated !== null) {
-        project.path = updated;
+      for (const link of project.workspaceLinks) {
+        const updated = replacePathPrefix(link.path, oldPath, newPath);
+
+        if (updated !== null) {
+          link.path = updated;
+          projectChanged = true;
+        }
+      }
+
+      const updatedPrimary = replacePathPrefix(project.path, oldPath, newPath);
+
+      if (updatedPrimary !== null) {
+        project.path = updatedPrimary;
+        projectChanged = true;
+      }
+
+      if (projectChanged) {
+        syncPrimaryPath(project);
         hasChanges = true;
       }
     }
@@ -249,13 +598,45 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
   }
 
   async function handlePathsDeleted(paths: string[]) {
-    const originalCount = userProjects.value.projects.length;
+    let hasChanges = false;
 
-    userProjects.value.projects = userProjects.value.projects.filter(
-      project => !isPathAffectedByDeletion(project.path, paths),
+    for (const project of userProjects.value.projects) {
+      const nextLinks = project.workspaceLinks.filter(
+        link => !isPathAffectedByDeletion(link.path, paths),
+      );
+
+      if (nextLinks.length !== project.workspaceLinks.length) {
+        project.workspaceLinks = nextLinks;
+        syncPrimaryPath(project);
+        hasChanges = true;
+      }
+    }
+
+    const nextProjects = userProjects.value.projects.filter(
+      project => project.workspaceLinks.length > 0 || !isPathAffectedByDeletion(project.path, paths),
     );
 
-    if (userProjects.value.projects.length !== originalCount) {
+    // Drop projects that lost every link and have no remaining path.
+    const prunedProjects = nextProjects.filter((project) => {
+      if (project.workspaceLinks.length > 0) {
+        return true;
+      }
+
+      return project.path !== '' && !isPathAffectedByDeletion(project.path, paths);
+    });
+
+    if (prunedProjects.length !== userProjects.value.projects.length) {
+      userProjects.value.projects = prunedProjects;
+      if (
+        userProjects.value.activeProjectId
+        && !prunedProjects.some(project => project.id === userProjects.value.activeProjectId)
+      ) {
+        userProjects.value.activeProjectId = prunedProjects[0]?.id ?? null;
+      }
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
       await saveProjects();
     }
   }
@@ -268,23 +649,42 @@ export const useUserProjectsStore = defineStore('userProjects', () => {
     if (!loadedFromBootstrap) {
       await loadProjects();
     }
+    else {
+      await persistIfNeeded();
+    }
   }
 
   return {
     userProjects,
     projects,
+    activeProjectId,
+    activeProject,
     init,
     isProject,
+    getProjectById,
     getProjectByPath,
     getProjectsByPaths,
+    createProject,
     addProject,
     removeProject,
+    removeProjectById,
     removeProjects,
     updateProject,
     renameProject,
+    setProjectDescription,
+    setContextNotes,
+    setTasksViewMode,
+    setActiveProjectId,
     setProjects,
+    addWorkspaceLink,
+    removeWorkspaceLink,
     recordProjectOpened,
     clearAllProjects,
+    addTask,
+    updateTask,
+    deleteTask,
+    moveTask,
+    reorderTasksInStatus,
     handlePathRenamed,
     handlePathsDeleted,
   };

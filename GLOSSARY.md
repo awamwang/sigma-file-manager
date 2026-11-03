@@ -57,8 +57,16 @@ The runtime Navigator session shell for a window (tabs, split panes, current ind
 _Avoid_: Work Group, working set
 
 **Project**:
-A single-folder bookmark with optional IDE/terminal metadata and open statistics. Independent of Work Group membership.
-_Avoid_: Work Group, workspace, repository
+A long-running product/domain container with independent workspace folder links, a durable task board (list + fixed four columns), and a single `contextNotes` blob. Replaces the former single-folder bookmark Project; legacy bookmarks migrate so their path becomes the first workspace link. Independent of Work Group membership — “open all links” opens Navigator tabs only.
+_Avoid_: Work Group, Goal Space, session
+
+**Workspace Link**:
+A folder path attached to a Project. Membership is Project-local (not a live bind to Work Group members). Missing links stay listed with an error badge until removed deliberately.
+_Avoid_: Member Folder, favorite, repository root
+
+**Project Task**:
+A durable outcome tracked on a Project board/list (`backlog` / `doing` / `review` / `done`), optionally linked to a Workspace Link and/or a manual outcome URL.
+_Avoid_: Status Center operation, Work Group session
 
 **Tab Group**:
 One Navigator tab strip entry, holding one or two panes (optional split view).

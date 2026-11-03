@@ -6,6 +6,7 @@ Copyright © 2021 - present Aleksey Hoffman. All rights reserved.
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { XIcon } from '@lucide/vue';
 import { DirEntryInteractive } from '@/components/dir-entry-interactive';
 import { Button } from '@/components/ui/button';
@@ -25,13 +26,13 @@ import DashboardActionBar from '@/modules/dashboard/components/dashboard-action-
 import DashboardEmptyState from '@/modules/dashboard/components/dashboard-empty-state.vue';
 import DashboardOpenFolderButton from '@/modules/dashboard/components/dashboard-open-folder-button.vue';
 import EntryCard from '@/modules/dashboard/components/entry-card.vue';
-import { useDashboardItemOpener } from '@/modules/dashboard/composables/use-dashboard-item-opener';
 import type { Project } from '@/types/user-projects';
+import { getProjectPrimaryPath } from '@/types/user-projects';
 
 const { t } = useI18n();
+const router = useRouter();
 const dashboardContentEntrance = getDashboardContentEntranceBinding();
 const userProjectsStore = useUserProjectsStore();
-const { openItem } = useDashboardItemOpener();
 
 const projects = computed(() => userProjectsStore.projects);
 
@@ -50,8 +51,11 @@ function getProjectBadgeLabel(project: Project): string {
 }
 
 async function openProject(project: Project) {
-  await userProjectsStore.recordProjectOpened(project.path);
-  openItem(project.path, false);
+  await userProjectsStore.recordProjectOpened(project.id);
+  await router.push({
+    name: 'projects',
+    query: { projectId: project.id },
+  });
 }
 </script>
 
@@ -76,12 +80,12 @@ async function openProject(project: Project) {
     <DirEntryInteractive
       v-for="(project, projectIndex) in projects"
       :key="project.id"
-      :path="project.path"
+      :path="getProjectPrimaryPath(project)"
       :is-file="false"
     >
       <EntryCard
         v-bind="getStaggerSlideUpBinding(projectIndex, DASHBOARD_CARD_ENTRANCE)"
-        :path="project.path"
+        :path="getProjectPrimaryPath(project) || project.name"
         :is-file="false"
         @click="openProject(project)"
       >
@@ -94,7 +98,7 @@ async function openProject(project: Project) {
                 size="icon"
                 class="entry-card__action dashboard-page__remove-action"
                 :aria-label="t('dashboard.actions.confirmRemove')"
-                @click="userProjectsStore.removeProject(project.path)"
+                @click="userProjectsStore.removeProjectById(project.id)"
               >
                 <XIcon :size="14" />
               </Button>
@@ -103,7 +107,10 @@ async function openProject(project: Project) {
               {{ t('dashboard.actions.confirmRemove') }}
             </TooltipContent>
           </Tooltip>
-          <DashboardOpenFolderButton :path="project.path" />
+          <DashboardOpenFolderButton
+            v-if="getProjectPrimaryPath(project)"
+            :path="getProjectPrimaryPath(project)"
+          />
         </template>
       </EntryCard>
     </DirEntryInteractive>

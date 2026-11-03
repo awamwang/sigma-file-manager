@@ -8,6 +8,7 @@ import {
   computed, markRaw, onBeforeUnmount, onMounted, ref,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { FolderIcon, FolderPlusIcon, XIcon } from '@lucide/vue';
 import {
   CommandDialog,
@@ -30,12 +31,12 @@ import {
   registerOpenProjectsPicker,
   unregisterOpenProjectsPicker,
 } from '@/modules/extensions/builtin-commands';
-import { useDashboardItemOpener } from '@/modules/dashboard/composables/use-dashboard-item-opener';
 import type { Project } from '@/types/user-projects';
+import { getProjectPrimaryPath } from '@/types/user-projects';
 
 const { t } = useI18n();
+const router = useRouter();
 const userProjectsStore = useUserProjectsStore();
-const { openItem } = useDashboardItemOpener();
 
 const isOpen = ref(false);
 
@@ -70,7 +71,7 @@ function getProjectBadgeLabel(project: Project): string {
 }
 
 function getProjectItemValue(project: Project): string {
-  return `${project.name} ${project.path}`;
+  return `${project.name} ${getProjectPrimaryPath(project)}`;
 }
 
 function open() {
@@ -83,12 +84,15 @@ function close() {
 
 async function openProject(project: Project) {
   close();
-  await userProjectsStore.recordProjectOpened(project.path);
-  openItem(project.path, false);
+  await userProjectsStore.recordProjectOpened(project.id);
+  await router.push({
+    name: 'projects',
+    query: { projectId: project.id },
+  });
 }
 
 function removeProject(project: Project) {
-  void userProjectsStore.removeProject(project.path);
+  void userProjectsStore.removeProjectById(project.id);
 
   toast.custom(markRaw(ToastStatic), {
     componentProps: {
@@ -147,7 +151,7 @@ onBeforeUnmount(() => {
               class="projects-quick-picker__icon"
             />
             <span class="projects-quick-picker__name">{{ project.name }}</span>
-            <span class="projects-quick-picker__path">{{ project.path }}</span>
+            <span class="projects-quick-picker__path">{{ getProjectPrimaryPath(project) }}</span>
             <span class="projects-quick-picker__badge">
               {{ getProjectBadgeLabel(project) }}
             </span>
